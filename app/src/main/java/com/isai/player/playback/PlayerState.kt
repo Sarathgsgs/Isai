@@ -28,7 +28,8 @@ data class PlayerState(
     val repeatMode: RepeatMode = RepeatMode.OFF,
     val queue: List<Track> = emptyList(),
     val currentQueueIndex: Int = -1,
-    val isConnected: Boolean = false
+    val isConnected: Boolean = false,
+    val playbackErrorMessage: String? = null
 ) {
     val progress: Float
         get() = if (durationMs > 0L) {

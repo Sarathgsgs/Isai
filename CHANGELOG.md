@@ -5,6 +5,24 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0-hardening-edge-cases] - 2026-11-06
+### Added
+- Phase 3 / Prompt L: Comprehensive hardening against SAF storage permission revocation, corrupt audio auto-skipping, zero-duration divide-by-zero guards, and Android StrictMode diagnostics.
+- Storage Access Framework Hardening:
+  - Validates persisted permissions via `contentResolver.persistedUriPermissions` on cold start in `MainActivity`.
+  - Automatically resets invalidated/revoked music folder paths and smoothly routes the user to `OnboardingScreen` without crashing.
+  - Safeguarded `FolderScanner`, `MetadataExtractor`, and `ArtCache` against `SecurityException` and permission expiration.
+- Playback Resilience & Corrupt Audio Auto-Skip:
+  - ExoPlayer error listener in `PlaybackService` catches `PlaybackException` (IO/Decode errors) and auto-skips to the next track in the queue.
+  - Loop guard circuit breaker: stops playback after $N$ consecutive errors ($N \ge \text{queue.size}$) to prevent infinite error loops on invalid playlists.
+  - Broadcasts error message through `PlayerState.playbackErrorMessage` and resets on successful playback.
+- Zero-Duration & NaN Mathematical Safeguards:
+  - `TonearmGeometry`: Math guards against `Float.NaN` and `Float.POSITIVE_INFINITY` in `trackAngle` and `progressFromAngle`.
+  - `PlayerState.progress`: Clamps to 0f safely whenever `durationMs <= 0`.
+- Android StrictMode:
+  - Configured in `IsaiApp.kt` for `BuildConfig.DEBUG` with `ThreadPolicy` detecting slow calls and `VmPolicy` detecting leaked SQLite objects and closeables.
+- Unit tests: `PlaybackHardeningTest` verifying zero duration progress, NaN safety in tonearm geometry, and clamping bounds.
+
 ## [0.13.0-settings-theming-polish] - 2026-11-06
 ### Added
 - Phase 3 / Prompt K: Production Settings screen, Theming polish, Library maintenance, Vinyl needle-lift preferences, and WCAG AA accessibility compliance.

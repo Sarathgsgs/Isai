@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.DefaultMediaNotificationProvider
@@ -82,11 +83,33 @@ class PlaybackService : MediaSessionService() {
 
         setMediaNotificationProvider(notificationProvider)
 
-        // Player event listener for play history and queue sync
+        // Player event listener for play history, queue sync, and corrupt track auto-skip
         player.addListener(object : Player.Listener {
+            private var consecutiveErrorCount = 0
+
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                consecutiveErrorCount = 0
                 val track = mediaItem?.let(MediaItemMapper::toTrack)
                 playHistoryTracker.onTrackChanged(track)
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                consecutiveErrorCount++
+                val queueSize = player.mediaItemCount
+                if (queueSize > 1 && consecutiveErrorCount < queueSize) {
+                    // Automatically skip corrupt or unplayable track
+                    if (player.hasNextMediaItem()) {
+                        player.seekToNextMediaItem()
+                    } else {
+                        player.seekToDefaultPosition(0)
+                    }
+                    player.prepare()
+                    player.play()
+                } else {
+                    // Terminate loop when all items fail or single track is corrupt
+                    player.stop()
+                    consecutiveErrorCount = 0
+                }
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {

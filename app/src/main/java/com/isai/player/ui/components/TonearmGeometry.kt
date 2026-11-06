@@ -59,7 +59,8 @@ class TonearmGeometry(
      * Maps playback progress [0..1] to the corresponding tonearm angle in degrees.
      */
     fun trackAngle(progress: Float): Float {
-        val p = progress.coerceIn(0f, 1f)
+        val safeProgress = if (progress.isNaN() || progress.isInfinite()) 0f else progress
+        val p = safeProgress.coerceIn(0f, 1f)
         return alphaOuter + p * (alphaInner - alphaOuter)
     }
 
@@ -67,7 +68,7 @@ class TonearmGeometry(
      * Maps a given tonearm angle [alphaDeg] to normalized playback progress [0..1].
      */
     fun progressFromAngle(alphaDeg: Float): Float {
-        if (alphaInner == alphaOuter) return 0f
+        if (alphaDeg.isNaN() || alphaDeg.isInfinite() || alphaInner == alphaOuter) return 0f
         return ((alphaDeg - alphaOuter) / (alphaInner - alphaOuter)).coerceIn(0f, 1f)
     }
 

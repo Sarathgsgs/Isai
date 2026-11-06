@@ -69,9 +69,16 @@ class PlayerController @Inject constructor(
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 if (isPlaying) {
+                    _playerState.update { it.copy(playbackErrorMessage = null) }
                     startPositionTicker()
                 } else {
                     stopPositionTicker()
+                }
+            }
+
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                _playerState.update {
+                    it.copy(playbackErrorMessage = "Playback error: ${error.errorCodeName}")
                 }
             }
         })

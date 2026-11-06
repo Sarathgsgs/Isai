@@ -216,4 +216,11 @@
     <string name="settings_offline_badge_desc">Isai has zero internet permissions. No network calls, ads, tracking, or cloud telemetry.</string>
     <string name="settings_action_open_labs">Open Component Labs</string>
     <string name="settings_developer_desc">Test interactive Tonearm, Vinyl disc physics, and Stage in isolation.</string>
+
+    <!-- Hardening & Error Handling -->
+    <string name="error_permission_revoked_title">Folder Access Revoked</string>
+    <string name="error_permission_revoked_message">Access to your previously selected music folder was revoked or storage was unmounted. Please select a folder to build your library.</string>
+    <string name="error_corrupt_track_skipped">Unable to play track; skipped to next</string>
+    <string name="error_all_tracks_unplayable">Unable to play tracks in queue. Please check your audio files.</string>
+    <string name="error_zero_duration_unsupported">Track duration unknown</string>
 </resources>

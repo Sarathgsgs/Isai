@@ -43,7 +43,15 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
 
             if (selectedFolderUri != "CHECKING") {
-                val startRoute = if (selectedFolderUri.isNullOrBlank()) {
+                val hasPermission = isFolderPermissionGranted(selectedFolderUri)
+                if (!hasPermission && !selectedFolderUri.isNullOrBlank()) {
+                    // Permission was revoked externally; reset stored folder
+                    scope.launch {
+                        settingsRepository.setSelectedFolder(null, null)
+                    }
+                }
+
+                val startRoute = if (!hasPermission || selectedFolderUri.isNullOrBlank()) {
                     com.isai.player.ui.navigation.NavRoute.Onboarding
                 } else {
                     com.isai.player.ui.navigation.NavRoute.Home
@@ -63,6 +71,18 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    private fun isFolderPermissionGranted(uriString: String?): Boolean {
+        if (uriString.isNullOrBlank()) return false
+        return try {
+            val targetUri = android.net.Uri.parse(uriString)
+            contentResolver.persistedUriPermissions.any { perm ->
+                perm.uri == targetUri && perm.isReadPermission
+            }
+        } catch (e: Exception) {
+            false
         }
     }
 }
