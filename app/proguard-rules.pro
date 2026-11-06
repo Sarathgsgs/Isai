@@ -26,7 +26,7 @@
 # Room Database & DAOs
 # ==============================================================================
 -keep class * extends androidx.room.RoomDatabase
--keep class com.isai.player.data.database.** { *; }
+-keep class com.isai.player.data.db.** { *; }
 -keep class * extends androidx.room.migration.Migration { *; }
 -dontwarn androidx.room.paging.**
 

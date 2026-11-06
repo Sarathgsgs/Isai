@@ -17,10 +17,13 @@ Pure offline local music player with interactive spinning vinyl and tonearm.
 ## Full Description
 Rediscover the physical joy of listening to music on Android with **Isai**, a modern offline music player designed around a photorealistic, interactive turntable and working tonearm.
 
-### 🎵 The Vinyl Experience
-- **Interactive Turntable**: Watch your album artwork spin as an authentic 33⅓ RPM vinyl record with 48 micro-grooves, metallic spindle, and dynamic lighting sheen.
+### 🎵 The Vinyl & Audio Experience
+- **Interactive Turntable**: Watch your album artwork spin as an authentic 33⅓ RPM vinyl record with micro-grooves, metallic spindle, and dynamic lighting sheen.
 - **Physical Tonearm Scrubbing**: Drag the aluminum tonearm directly to seek through your favorite grooves. Feel subtle 5% tactile haptic clicks under your fingertips.
 - **Needle-Drop Spring Physics**: Lift the tonearm to pause or stop, and drop it back onto the record with authentic needle-drop bounce physics.
+- **Waveform Seekbar**: High-precision audio transient waveform visualizer with bars, line, and classic styles that arbitrates seamlessly with tonearm scrubbing.
+- **Offline Synced Lyrics**: Auto-scrolling, tap-to-seek synced lyrics parsed directly from ID3v2/Vorbis embedded tags, local `.lrc` sidecars, or user-imported files with manual timing calibration.
+- **Home-Screen Turntable Widget**: Beautiful Jetpack Glance widget with responsive layouts, pre-rendered vinyl art, tonearm posture synchronization, and instant playback controls.
 - **Swipe to Skip**: Swipe across the turntable platter to seamlessly change songs.
 
 ### 🛡️ 100% Offline & Private

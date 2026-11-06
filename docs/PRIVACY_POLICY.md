@@ -39,8 +39,8 @@ All data generated while using Isai remains exclusively on your physical device 
 1. **Music Library Index**: Cached metadata (song titles, artists, album names, durations, track numbers) is stored in a local SQLite database (powered by Android Room).
 2. **Playlists & Favorites**: Playlists you create and songs you favorite are stored locally on your device.
 3. **Playback History**: Recent play timestamps and counts (used strictly for the on-device "Recently Played" home carousel) are stored locally.
-4. **Artwork Cache**: Downsampled album artwork is stored in the application's private internal cache directory for rapid rendering.
-5. **Preferences**: Settings such as theme (Dark, Light, System), dynamic accent colors, tonearm needle-lift behavior, and sleep timer choices are stored in local Jetpack DataStore Preferences.
+4. **Artwork, Waveforms & Lyrics**: Downsampled album artwork, hardware-extracted audio waveform peaks, and parsed offline lyrics are stored entirely in the application's private internal storage and local SQLite database for rapid on-device rendering.
+5. **Preferences**: Settings such as theme (Dark, Light, System), dynamic accent colors, tonearm needle-lift behavior, waveform seekbar style, and sleep timer choices are stored in local Jetpack DataStore Preferences.
 
 All local data is automatically purged if you clear the app's storage in Android Settings or uninstall the app.
 
