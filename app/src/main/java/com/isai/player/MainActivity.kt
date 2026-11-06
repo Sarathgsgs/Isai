@@ -12,6 +12,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isai.player.data.repository.SettingsRepository
 import com.isai.player.data.repository.ThemeMode
+import com.isai.player.playback.PlayerController
 import com.isai.player.ui.navigation.MainScaffold
 import com.isai.player.ui.theme.IsaiTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,6 +24,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var playerController: PlayerController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -54,6 +58,7 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         startDestination = startRoute,
+                        playerController = playerController,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

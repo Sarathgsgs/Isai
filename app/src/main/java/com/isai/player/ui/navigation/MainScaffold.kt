@@ -21,13 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.isai.player.R
 import com.isai.player.data.repository.ThemeMode
+import com.isai.player.playback.PlayerController
+import com.isai.player.playback.PlayerState
 import com.isai.player.ui.components.BottomBarTab
 import com.isai.player.ui.components.IsaiBottomBar
 import com.isai.player.ui.components.IsaiTopBar
@@ -49,11 +54,15 @@ fun MainScaffold(
     currentThemeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
     startDestination: NavRoute = NavRoute.Home,
+    playerController: PlayerController? = null,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route
+
+    val defaultPlayerState = remember { PlayerState() }
+    val playerState = playerController?.playerState?.collectAsStateWithLifecycle()?.value ?: defaultPlayerState
 
     // Track active bottom tab
     var selectedTab by remember { mutableStateOf(BottomBarTab.HOME) }
@@ -234,21 +243,24 @@ fun MainScaffold(
 
             // Floating MiniPlayer pinned above bottom bar (visible on primary & detail tabs)
             AnimatedVisibility(
-                visible = isPrimaryTab && !isNowPlayingOrOnboarding,
+                visible = isPrimaryTab && !isNowPlayingOrOnboarding && playerState.hasTrack,
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
-                var isPlaying by remember { mutableStateOf(false) }
+                val track = playerState.currentTrack
+                val trackTitle = track?.title ?: stringResource(id = R.string.miniplayer_placeholder_title)
+                val trackArtist = track?.let { "${it.artist} · ${it.album}" } ?: stringResource(id = R.string.miniplayer_placeholder_artist)
+
                 MiniPlayer(
-                    title = "Sundari Kannal Oru Sethi",
-                    artist = "Ilaiyaraaja · Thalapathi",
-                    artUri = null,
-                    isPlaying = isPlaying,
-                    progress = 0.35f,
+                    title = trackTitle,
+                    artist = trackArtist,
+                    artUri = track?.artPath,
+                    isPlaying = playerState.isPlaying,
+                    progress = playerState.progress,
                     onClick = { navController.navigate(NavRoute.NowPlaying) },
-                    onPlayPauseClick = { isPlaying = !isPlaying },
-                    onNextClick = {}
+                    onPlayPauseClick = { playerController?.togglePlayPause() },
+                    onNextClick = { playerController?.skipToNext() }
                 )
             }
         }

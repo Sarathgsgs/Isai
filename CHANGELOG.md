@@ -5,6 +5,16 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0-nowplaying-integration] - 2026-11-06
+### Added
+- Phase 3 / Prompt H: Full Now Playing integration with live VinylStage, interactive seekbar, ControlDial, QueueBottomSheet, and live MiniPlayer.
+- `NowPlayingViewModel`: Unified ViewModel decoupling scrub preview from playback ticks, mapping tracks to `StageTrack`, managing favorite toggle, and dispatching tonearm needle actions.
+- `NowPlayingScreen`: Complete Now Playing screen integrating `VinylStage` (vinyl disc rotation, tonearm tracking, needle bounce, headshell tap toggle, horizontal disc swipe), seekbar with elapsed and remaining time labels, favorite heart button, and queue modal sheet trigger.
+- `ControlDial`: Hardware dial component with shuffle toggle, skip previous (with 3-second restart rule), play/pause with spring scale animation, skip next, and 3-state repeat mode cycling (`OFF` $\to$ `ALL` $\to$ `ONE`).
+- `QueueBottomSheet`: Material 3 modal bottom sheet displaying the playing queue, highlighting active song with animated equalizer icon, instant seek on tap, individual track removal, and clear queue action.
+- Live `MiniPlayer`: Connected in `MainScaffold` directly to `PlayerController` with real album artwork, title, artist, progress line, and responsive play/pause and skip controls.
+- Unit tests in `NowPlayingViewModelTest` verifying scrub preview decoupling, lift behavior honoring `STOP` vs `PAUSE`, and favorite toggling.
+
 ## [0.9.0-playback-engine] - 2026-11-06
 ### Added
 - Phase 3 / Prompt G: AndroidX Media3 playback engine, `PlaybackService`, `PlayerController` facade, and audio automation.
