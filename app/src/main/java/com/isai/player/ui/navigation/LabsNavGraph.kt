@@ -18,3 +18,4 @@ sealed interface LabsRoute {
     @Serializable
     data object VinylStageLab : LabsRoute
 }
+

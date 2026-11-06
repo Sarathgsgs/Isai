@@ -9,3 +9,4 @@ class IsaiApp : Application() {
         super.onCreate()
     }
 }
+

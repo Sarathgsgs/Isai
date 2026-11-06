@@ -146,3 +146,4 @@ detekt {
     config.setFrom(file("../detekt.yml"))
     buildUponDefaultConfig = true
 }
+

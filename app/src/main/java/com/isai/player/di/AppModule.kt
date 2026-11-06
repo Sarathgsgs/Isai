@@ -12,3 +12,4 @@ import dagger.hilt.components.SingletonComponent
 object AppModule {
     // Dependency bindings will be populated in subsequent phases
 }
+

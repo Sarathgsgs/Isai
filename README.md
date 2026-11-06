@@ -51,3 +51,4 @@ ViewModel (StateFlow<UiState>) ──► Repository ──► Room DB / Document
 # Build debug APK
 ./gradlew assembleDebug
 ```
+
