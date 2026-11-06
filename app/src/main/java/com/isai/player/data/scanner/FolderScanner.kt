@@ -126,3 +126,4 @@ class FolderScanner @Inject constructor(
         }
     }
 }
+

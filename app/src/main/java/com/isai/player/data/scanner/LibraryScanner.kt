@@ -148,3 +148,4 @@ class LibraryScanner @Inject constructor(
         _scanState.value = ScanState.Idle
     }
 }
+

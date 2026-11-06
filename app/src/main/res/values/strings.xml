@@ -54,4 +54,18 @@
     <string name="scanner_status_discovered">Discovered %1$d files…</string>
     <string name="scanner_status_completed">Found %1$d tracks</string>
     <string name="scanner_status_error">Scanning failed</string>
+
+    <!-- Playback & Notification -->
+    <string name="playback_notification_channel_name">Music Playback</string>
+    <string name="playback_notification_channel_description">Active media playback controls and status</string>
+    <string name="action_previous">Previous</string>
+    <string name="action_play">Play</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_next">Next</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_repeat_off">Repeat Off</string>
+    <string name="action_repeat_all">Repeat All</string>
+    <string name="action_repeat_one">Repeat Current Track</string>
+    <string name="action_shuffle_on">Shuffle Enabled</string>
+    <string name="action_shuffle_off">Shuffle Disabled</string>
 </resources>

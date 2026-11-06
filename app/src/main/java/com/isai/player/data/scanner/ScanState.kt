@@ -34,3 +34,4 @@ sealed interface ScanState {
 
     data class Error(val message: String) : ScanState
 }
+

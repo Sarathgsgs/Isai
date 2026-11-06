@@ -54,3 +54,4 @@ class FolderScannerTest {
         assertFalse(folderScanner.isAudioFile(null, null))
     }
 }
+

@@ -5,6 +5,18 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0-playback-engine] - 2026-11-06
+### Added
+- Phase 3 / Prompt G: AndroidX Media3 playback engine, `PlaybackService`, `PlayerController` facade, and audio automation.
+- `PlaybackService`: Foreground `MediaSessionService` with ExoPlayer, audio focus management, becoming noisy handling (auto-pause on headphone disconnect), local wake lock, and system MediaStyle notifications with album art and compact actions.
+- `PlayerController`: Single source of truth UI facade singleton managing `MediaController` connection, exposing `StateFlow<PlayerState>`, and running a zero-allocation 200ms position ticker active strictly during playback.
+- Complete playback controls: play, pause, toggle, seek, 3-second skip-previous restart rule, next with queue wrap-around, shuffle, and 3-state repeat mode cycling (`OFF` $\to$ `ALL` $\to$ `ONE`).
+- Queue management: `playTrack`, `playNext`, `addToQueue`, `removeFromQueue`, `reorderQueue`, and `clearQueue`.
+- `QueueStore`: Automatic playback queue and position persistence to Room (`QueueDao`) and cold launch restoration.
+- `PlayHistoryTracker`: Automatic playback logger recording songs to `HistoryRepository` once played for $\ge 30\text{ seconds}$ (or $\ge 50\%$ for short tracks).
+- `SleepTimer`: Background countdown timer supporting 15/30/45/60 min presets and "End of current track", with a smooth 5-second exponential volume fade-out.
+- Unit tests: `PlayerStateTest`, `PlayHistoryTrackerTest`, and `SleepTimerTest`.
+
 ## [0.8.0-onboarding-scanner] - 2026-11-06
 ### Added
 - Phase 3 / Prompt F: Storage Access Framework folder selection, high-speed recursive scanner, and onboarding.
