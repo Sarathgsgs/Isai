@@ -52,3 +52,4 @@ class PackageValidator @Inject constructor(
             level == ClientTrustLevel.TRUSTED_ASSISTANT
     }
 }
+

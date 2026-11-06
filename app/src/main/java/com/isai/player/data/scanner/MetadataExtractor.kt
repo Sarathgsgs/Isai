@@ -95,6 +95,12 @@ class MetadataExtractor @Inject constructor(
 
         val titleSort = sanitizeForSort(title)
 
+        val relPath = if (file.folderPath == "Root" || file.folderPath.isBlank()) {
+            file.displayName
+        } else {
+            "${file.folderPath}/${file.displayName}"
+        }
+
         TrackEntity(
             id = Fnv1a.hash64(file.uriString),
             uri = file.uriString,
@@ -114,8 +120,8 @@ class MetadataExtractor @Inject constructor(
             folderPath = file.folderPath,
             dateAdded = System.currentTimeMillis(),
             isMissing = false,
-            relativePath = file.displayName,
-            relativePathNorm = file.displayName.lowercase(Locale.ROOT),
+            relativePath = relPath,
+            relativePathNorm = relPath.lowercase(Locale.ROOT),
             lyricsUri = null,
             hasLyrics = false
         )

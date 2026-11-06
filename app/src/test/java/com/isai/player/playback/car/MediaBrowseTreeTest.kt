@@ -72,3 +72,4 @@ class MediaBrowseTreeTest {
         assertEquals(MediaBrowseTree.CONTENT_STYLE_GRID, artistHint)
     }
 }
+

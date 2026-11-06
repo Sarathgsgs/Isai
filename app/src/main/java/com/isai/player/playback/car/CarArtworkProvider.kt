@@ -102,3 +102,4 @@ class CarArtworkProvider : ContentProvider() {
         selectionArgs: Array<out String>?
     ): Int = 0
 }
+

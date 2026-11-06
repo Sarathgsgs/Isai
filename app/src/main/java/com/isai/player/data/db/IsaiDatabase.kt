@@ -34,7 +34,7 @@ import com.isai.player.data.db.entity.WaveformEntity
         WaveformEntity::class,
         LyricsEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class IsaiDatabase : RoomDatabase() {
@@ -86,6 +86,14 @@ abstract class IsaiDatabase : RoomDatabase() {
                         FOREIGN KEY(`track_id`) REFERENCES `tracks`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
                     )
                     """.trimIndent()
+                )
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_tracks_relative_path_norm` ON `tracks` (`relative_path_norm`)"
                 )
             }
         }

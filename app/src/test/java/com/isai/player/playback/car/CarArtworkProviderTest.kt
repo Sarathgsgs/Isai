@@ -44,3 +44,4 @@ class CarArtworkProviderTest {
         CarArtworkProvider.validateAndResolveTrackId(uri)
     }
 }
+

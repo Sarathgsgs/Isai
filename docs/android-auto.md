@@ -74,3 +74,4 @@ The Desktop Head Unit (DHU) emulates an Android Auto infotainment head unit on y
 | **Steering Wheel Controls** | Next, Previous, and Play/Pause hardware controls function seamlessly. |
 | **Voice Command** | "Hey Google, play <song> on Isai" resolves and begins playing without phone interaction. |
 | **Audio Focus** | Navigational voice prompts (e.g., Google Maps) duck or pause Isai audio and resume smoothly. |
+

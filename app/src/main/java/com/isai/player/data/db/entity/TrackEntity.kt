@@ -14,7 +14,8 @@ import androidx.room.PrimaryKey
         Index(value = ["album"]),
         Index(value = ["folder_path"]),
         Index(value = ["is_missing"]),
-        Index(value = ["date_added"])
+        Index(value = ["date_added"]),
+        Index(value = ["relative_path_norm"])
     ]
 )
 data class TrackEntity(

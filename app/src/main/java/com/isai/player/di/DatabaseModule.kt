@@ -36,7 +36,8 @@ object DatabaseModule {
         )
             .addMigrations(
                 IsaiDatabase.MIGRATION_1_2,
-                IsaiDatabase.MIGRATION_2_3
+                IsaiDatabase.MIGRATION_2_3,
+                IsaiDatabase.MIGRATION_3_4
             )
             .build()
     }

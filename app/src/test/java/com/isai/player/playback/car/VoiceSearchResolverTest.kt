@@ -90,3 +90,4 @@ class VoiceSearchResolverTest {
         assertEquals("Yesterday", result[0].title)
     }
 }
+

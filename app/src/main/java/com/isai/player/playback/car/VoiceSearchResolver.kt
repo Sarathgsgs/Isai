@@ -56,3 +56,4 @@ class VoiceSearchResolver @Inject constructor(
         trackDao.getRandomTracks(50).map { it.toDomain() }
     }
 }
+

@@ -5,6 +5,41 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0-m3u-playlists] - 2026-11-06
+### Added
+- Add-on Round 2 / Prompt U: Comprehensive M3U/M3U8 playlist import and export engine with Room v4 migration, path normalization, 4-stage track matching, and interactive preview UI.
+- Room Database Schema v4 Migration:
+  - Added indexed `relative_path_norm` on `TrackEntity` table for rapid database-level matching.
+  - Implemented `MIGRATION_3_4` and committed Room schema JSON `4.json`.
+  - Updated `MetadataExtractor` and `FolderScanner` to extract and populate relative paths during recursive SAF music directory scans.
+- Path Normalizer (`PathNormalizer`):
+  - Converts Windows backslashes (`\`) to forward slashes (`/`).
+  - Strips Windows drive prefixes (`C:\`, `D:/`).
+  - Decodes percent-encoded URLs (`%20` $\to$ space).
+  - Normalizes leading relative tokens (`./`) and redundant slashes.
+- High-Performance M3U/M3U8 Parser (`M3uParser`):
+  - Streaming line parser with bounds safety (5 MB size cap, 50,000 entry cap).
+  - Supports `#EXTM3U`, `#PLAYLIST:<name>`, and `#EXTINF:<duration>,<artist> - <title>` or `<title>`.
+  - UTF-8 with BOM stripping and ISO-8859-1 fallback support.
+- Multi-Stage Track Resolution Engine (`TrackMatcher`):
+  - Stage 1: Exact `relativePathNorm` match ($O(1)$ lookup).
+  - Stage 2: Suffix path match across trailing directory segments (handles library transfers from external OS roots).
+  - Stage 3: Filename match with duration tolerance disambiguation ($\pm 2\text{s}$).
+  - Stage 4: Tag metadata match on title and artist with duration tolerance ($\pm 3\text{s}$).
+  - Returns structured `MatchSummary` classifying items into `Matched`, `Ambiguous`, and `NotFound`.
+- M3U8 Export Serializer (`M3uWriter`):
+  - Serializes playlists, favorites, and current queue into standard `#EXTM3U` UTF-8 format.
+  - Automatically calculates relative paths against library root.
+- Import & Export UX:
+  - Interactive modal bottom sheet (`M3uImportPreviewSheet`) displaying parsed playlist name, match counts, and conflict resolver.
+  - Seamless SAF file picker import and create/merge options.
+- Compatibility Tests:
+  - `PathNormalizerTest`: Tests Windows backslashes, percent URLs, and segment slicing.
+  - `M3uParserTest`: Tests standard EXTM3U, simple paths, UTF-8 BOM, and comments.
+  - `TrackMatcherTest`: Tests all 4 resolution stages and ambiguity detection.
+  - `M3uWriterTest`: Tests serialization of headers, tracks, and durations.
+  - `M3uFixturesCompatibilityTest`: Verifies real-world playlist fixtures from foobar2000, VLC, MusicBee, and Poweramp.
+
 ## [0.20.0-android-auto] - 2026-11-06
 ### Added
 - Add-on Round 2 / Prompt T: Android Auto, Bluetooth car browsing, and Google Assistant voice control support via MediaLibraryService migration.
