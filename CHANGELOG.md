@@ -5,6 +5,40 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0-offline-lyrics] - 2026-11-06
+### Added
+- Add-on Round 1 / Prompt P: Complete offline lyrics support (discovery, pure Kotlin ID3v2/Vorbis tag extraction, LRC parser, auto-scrolling LyricsView, offset calibration, Room v3 migration).
+- Offline Discovery & Priority Order:
+  - Priority chain: User-imported lyrics > Sidecar file (`<song>.lrc` / `<song>.txt`) > Embedded tags (`USLT`/`SYLT`/Vorbis).
+  - Rescanning the library never overwrites user imports or calibrated offsets.
+- Zero-Dependency Embedded Tag Reader (`EmbeddedLyricsReader`):
+  - Pure Kotlin stream parser extracting ID3v2 `USLT` (Unsynchronized) & `SYLT` (Synchronized) lyrics from MP3 files.
+  - Vorbis Comment block parser extracting `LYRICS` tags from FLAC and OGG files.
+  - Adds zero third-party dependencies or binary overhead.
+- High-Performance LRC & Plain-Text Parser (`LrcParser`):
+  - Parses standard `[mm:ss.xx]` and 3-digit `[mm:ss.xxx]` timestamps.
+  - Supports multi-timestamp lines (e.g. `[00:10.00][00:20.00]Chorus line`) into discrete timed entries.
+  - Extracts metadata headers `[ti:]`, `[ar:]`, `[al:]`, `[offset:±ms]`.
+  - Encoding resilience: handles UTF-8 with BOM (`\uFEFF`), UTF-16, and ISO-8859-1 fallback without crashing.
+  - Efficient $O(\log N)$ binary search lookup for instantaneous active line resolution on position ticks.
+- Room Database Migration v2 -> v3:
+  - `LyricsEntity`: Stores trackId, source (`IMPORTED`, `SIDECAR`, `EMBEDDED`), format (`SYNCED`, `PLAIN`), content, and offset with Foreign Key cascade deletion to `TrackEntity`.
+  - `MIGRATION_2_3`: SQLite migration with committed schema JSON `3.json`.
+- Now Playing Lyrics Experience (`LyricsView`, `LyricsOffsetDialog`):
+  - Top bar toggle button to smoothly crossfade between `VinylStage` and `LyricsView`.
+  - Synced View: Centered `LazyColumn` auto-scrolls with active line in vivid accent, bold weight, and scale pop.
+  - 4-Second User Scroll Pause: User scrolling temporarily pauses auto-scroll and surfaces a "Jump to current" floating pill.
+  - Tap-to-seek: Tapping any lyric line seeks playback directly and animates the physical tonearm to the matching groove.
+  - Offset Calibration Sheet: Modal bottom sheet offering coarse ($\pm 0.5\text{s}$) and fine ($\pm 0.1\text{s}$) timing calibration, persisted to Room.
+  - Empty state with direct "Import Lyrics" SAF document picker.
+  - TalkBack accessibility with live region announcements on active lyric line transitions.
+- Settings Integration:
+  - Appearance: Lyrics text size selector (`Small`, `Medium`, `Large`) and "Keep screen on while viewing lyrics" switch.
+  - Library: Lyrics count display.
+- Unit Tests:
+  - `LrcParserTest`: Validates standard, 3-digit, multi-timestamp, unsorted, BOM, and binary search lookup.
+  - `LyricsRepositoryTest`: Verifies priority order, user import persistence, and offset updating.
+
 ## [0.16.0-waveform-seekbar] - 2026-11-06
 ### Added
 - Add-on Round 1 / Prompt O: On-device audio waveform extraction, Room database schema v2 migration, high-performance Canvas WaveformSeekBar, shared tonearm scrub arbitration, and settings appearance options.

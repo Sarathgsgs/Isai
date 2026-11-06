@@ -20,6 +20,12 @@ enum class SeekBarStyle {
     CLASSIC
 }
 
+enum class LyricsTextSize {
+    SMALL,
+    MEDIUM,
+    LARGE
+}
+
 interface SettingsRepository {
     val themeMode: Flow<ThemeMode>
     val liftBehavior: Flow<LiftBehavior>
@@ -30,6 +36,8 @@ interface SettingsRepository {
     val sleepTimerStopAtEnd: Flow<Boolean>
     val seekBarStyle: Flow<SeekBarStyle>
     val preGenerateWaveforms: Flow<Boolean>
+    val lyricsTextSize: Flow<LyricsTextSize>
+    val keepScreenOnWhileLyrics: Flow<Boolean>
 
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setLiftBehavior(behavior: LiftBehavior)
@@ -40,4 +48,6 @@ interface SettingsRepository {
     suspend fun clearSleepTimer()
     suspend fun setSeekBarStyle(style: SeekBarStyle)
     suspend fun setPreGenerateWaveforms(enabled: Boolean)
+    suspend fun setLyricsTextSize(size: LyricsTextSize)
+    suspend fun setKeepScreenOnWhileLyrics(enabled: Boolean)
 }

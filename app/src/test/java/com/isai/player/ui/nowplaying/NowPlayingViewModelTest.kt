@@ -3,6 +3,7 @@ package com.isai.player.ui.nowplaying
 import com.isai.player.data.model.Track
 import com.isai.player.data.repository.FavoritesRepository
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.LyricsRepository
 import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.SettingsRepository
 import com.isai.player.data.repository.WaveformRepository
@@ -36,6 +37,7 @@ class NowPlayingViewModelTest {
     private lateinit var favoritesRepository: FavoritesRepository
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var waveformRepository: WaveformRepository
+    private lateinit var lyricsRepository: LyricsRepository
 
     private val playerStateFlow = MutableStateFlow(PlayerState())
     private val liftBehaviorFlow = MutableStateFlow(LiftBehavior.PAUSE)
@@ -68,12 +70,14 @@ class NowPlayingViewModelTest {
         favoritesRepository = mockk(relaxed = true)
         settingsRepository = mockk(relaxed = true)
         waveformRepository = mockk(relaxed = true)
+        lyricsRepository = mockk(relaxed = true)
 
         every { playerController.playerState } returns playerStateFlow
         every { settingsRepository.liftBehavior } returns liftBehaviorFlow
         every { settingsRepository.seekBarStyle } returns seekBarStyleFlow
         every { favoritesRepository.observeIsFavorite(any()) } returns flowOf(false)
         every { waveformRepository.observeWaveform(any(), any(), any(), any()) } returns flowOf(WaveformState.Unavailable)
+        every { lyricsRepository.observeLyrics(any()) } returns flowOf(null)
     }
 
     @After
@@ -83,7 +87,13 @@ class NowPlayingViewModelTest {
 
     @Test
     fun scrubPreviewLifecycle() = runTest {
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
+        val viewModel = NowPlayingViewModel(
+            playerController,
+            favoritesRepository,
+            settingsRepository,
+            waveformRepository,
+            lyricsRepository
+        )
 
         assertNull(viewModel.scrubPreviewProgress.value)
 
@@ -98,7 +108,13 @@ class NowPlayingViewModelTest {
 
     @Test
     fun liftStopHonorsSetting() = runTest {
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
+        val viewModel = NowPlayingViewModel(
+            playerController,
+            favoritesRepository,
+            settingsRepository,
+            waveformRepository,
+            lyricsRepository
+        )
 
         // When LiftBehavior is PAUSE
         liftBehaviorFlow.value = LiftBehavior.PAUSE
@@ -114,7 +130,13 @@ class NowPlayingViewModelTest {
 
     @Test
     fun skipUpdatesLastSwipeDirection() = runTest {
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
+        val viewModel = NowPlayingViewModel(
+            playerController,
+            favoritesRepository,
+            settingsRepository,
+            waveformRepository,
+            lyricsRepository
+        )
 
         viewModel.skipToNext()
         assertEquals(SwipeDirection.NEXT, viewModel.lastSwipeDirection.value)
@@ -130,7 +152,13 @@ class NowPlayingViewModelTest {
         val track = createSampleTrack(id = 42L)
         playerStateFlow.value = PlayerState(currentTrack = track)
 
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
+        val viewModel = NowPlayingViewModel(
+            playerController,
+            favoritesRepository,
+            settingsRepository,
+            waveformRepository,
+            lyricsRepository
+        )
         testDispatcher.scheduler.advanceUntilIdle()
 
         viewModel.toggleFavorite()
@@ -141,7 +169,13 @@ class NowPlayingViewModelTest {
 
     @Test
     fun sleepTimerDelegatesToPlayerController() = runTest {
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
+        val viewModel = NowPlayingViewModel(
+            playerController,
+            favoritesRepository,
+            settingsRepository,
+            waveformRepository,
+            lyricsRepository
+        )
 
         viewModel.startSleepTimer(30 * 60 * 1000L, stopAtEndOfTrack = false)
         verify { playerController.startSleepTimer(30 * 60 * 1000L, false) }

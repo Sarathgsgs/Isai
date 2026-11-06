@@ -26,3 +26,4 @@ abstract class WaveformModule {
         fun provideWaveformExtractor(): WaveformExtractor = WaveformExtractor()
     }
 }
+

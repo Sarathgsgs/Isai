@@ -364,3 +364,4 @@ fun WaveformSeekBar(
             }
     )
 }
+

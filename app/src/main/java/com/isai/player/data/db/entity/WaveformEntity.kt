@@ -55,3 +55,4 @@ data class WaveformEntity(
         return result
     }
 }
+

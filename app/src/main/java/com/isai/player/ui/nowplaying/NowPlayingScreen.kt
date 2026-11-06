@@ -1,5 +1,13 @@
 package com.isai.player.ui.nowplaying
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +24,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.QueueMusic
+import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +52,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isai.player.R
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.LyricsState
+import com.isai.player.data.repository.LyricsTextSize
 import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.ThemeMode
 import com.isai.player.data.repository.WaveformState
@@ -62,12 +74,16 @@ fun NowPlayingScreen(
     modifier: Modifier = Modifier,
     viewModel: NowPlayingViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     val stageTrack by viewModel.stageTrack.collectAsStateWithLifecycle()
     val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
     val liftBehavior by viewModel.liftBehavior.collectAsStateWithLifecycle()
     val seekBarStyle by viewModel.seekBarStyle.collectAsStateWithLifecycle()
     val waveformState by viewModel.waveform.collectAsStateWithLifecycle()
+    val isLyricsVisible by viewModel.isLyricsVisible.collectAsStateWithLifecycle()
+    val lyricsState by viewModel.lyricsState.collectAsStateWithLifecycle()
+    val lyricsTextSize by viewModel.lyricsTextSize.collectAsStateWithLifecycle()
     val scrubPreviewProgress by viewModel.scrubPreviewProgress.collectAsStateWithLifecycle()
     val lastSwipeDirection by viewModel.lastSwipeDirection.collectAsStateWithLifecycle()
     val sleepTimerRemainingMs by viewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
@@ -75,13 +91,31 @@ fun NowPlayingScreen(
 
     var showQueueSheet by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
+    var showOffsetDialog by remember { mutableStateOf(false) }
     val queueSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // Document Picker launcher for importing .lrc / .txt files
+    val importLyricsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    val text = stream.bufferedReader().readText()
+                    viewModel.importLyrics(text)
+                }
+            }
+        }
+    }
 
     NowPlayingContent(
         playerState = playerState,
         stageTrack = stageTrack,
         isFavorite = isFavorite,
         isSleepTimerActive = sleepTimerRemainingMs > 0L || isStopAtEndOfTrack,
+        isLyricsVisible = isLyricsVisible,
+        lyricsState = lyricsState,
+        lyricsTextSize = lyricsTextSize,
         liftBehavior = liftBehavior,
         seekBarStyle = seekBarStyle,
         waveformState = waveformState,
@@ -89,6 +123,10 @@ fun NowPlayingScreen(
         lastSwipeDirection = lastSwipeDirection,
         onCollapseClick = onCollapseClick,
         onTogglePlayPause = { viewModel.togglePlayPause() },
+        onToggleLyrics = { viewModel.toggleLyricsView() },
+        onSeekToLyric = { viewModel.seekToLyricTimestamp(it) },
+        onImportLyricsClick = { importLyricsLauncher.launch(arrayOf("text/*", "application/octet-stream", "*/*")) },
+        onOpenOffsetDialog = { showOffsetDialog = true },
         onScrubStartArm = { viewModel.onScrubStart(ScrubOwner.ARM) },
         onScrubPreviewArm = { viewModel.onScrubPreview(ScrubOwner.ARM, it) },
         onScrubEndArm = { commit, progress -> viewModel.onScrubEnd(ScrubOwner.ARM, commit, progress) },
@@ -106,13 +144,20 @@ fun NowPlayingScreen(
         modifier = modifier
     )
 
+    if (showOffsetDialog) {
+        val currentOffset = (lyricsState as? LyricsState.Synced)?.offsetMs ?: 0
+        LyricsOffsetDialog(
+            currentOffsetMs = currentOffset,
+            onOffsetChange = { viewModel.setLyricsOffset(it) },
+            onDismissRequest = { showOffsetDialog = false }
+        )
+    }
+
     if (showSleepTimerDialog) {
         SleepTimerDialog(
             remainingMs = sleepTimerRemainingMs,
             isStopAtEndOfTrack = isStopAtEndOfTrack,
-            onStartTimer = { durationMs, stopAtEnd ->
-                // Sleep timer started
-            },
+            onStartTimer = { durationMs, stopAtEnd -> },
             onCancelTimer = { },
             onDismissRequest = { showSleepTimerDialog = false }
         )
@@ -130,9 +175,7 @@ fun NowPlayingScreen(
             onRemoveTrack = { index ->
                 viewModel.removeQueueItem(index)
             },
-            onClearQueue = {
-                // Clear queue
-            },
+            onClearQueue = { },
             onDismissRequest = {
                 showQueueSheet = false
             }
@@ -147,6 +190,9 @@ fun NowPlayingContent(
     stageTrack: StageTrack?,
     isFavorite: Boolean,
     isSleepTimerActive: Boolean = false,
+    isLyricsVisible: Boolean = false,
+    lyricsState: LyricsState = LyricsState.Empty,
+    lyricsTextSize: LyricsTextSize = LyricsTextSize.MEDIUM,
     liftBehavior: LiftBehavior,
     seekBarStyle: SeekBarStyle,
     waveformState: WaveformState,
@@ -154,6 +200,10 @@ fun NowPlayingContent(
     lastSwipeDirection: SwipeDirection,
     onCollapseClick: () -> Unit,
     onTogglePlayPause: () -> Unit,
+    onToggleLyrics: () -> Unit,
+    onSeekToLyric: (timestampMs: Long) -> Unit,
+    onImportLyricsClick: () -> Unit,
+    onOpenOffsetDialog: () -> Unit,
     onScrubStartArm: () -> Unit,
     onScrubPreviewArm: (Float) -> Unit,
     onScrubEndArm: (commit: Boolean, progress: Float) -> Unit,
@@ -199,6 +249,14 @@ fun NowPlayingContent(
                     }
                 },
                 actions = {
+                    // Lyrics Toggle Button
+                    IconButton(onClick = onToggleLyrics) {
+                        Icon(
+                            imageVector = Icons.Default.Subtitles,
+                            contentDescription = stringResource(id = R.string.action_lyrics),
+                            tint = if (isLyricsVisible) IsaiTheme.colors.accent else IsaiTheme.colors.onBackground
+                        )
+                    }
                     IconButton(onClick = onOpenSleepTimerClick) {
                         Icon(
                             imageVector = Icons.Default.Bedtime,
@@ -240,28 +298,47 @@ fun NowPlayingContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // 1. Vinyl Stage (Interactive Vinyl Record + Tonearm + Ambient Background)
+            // 1. Center Hero Area: Smooth transition between VinylStage and LyricsView
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1.0f)
             ) {
-                VinylStage(
-                    track = stageTrack,
-                    isPlaying = playerState.isPlaying,
-                    progress = { currentProgress },
-                    durationMs = durationMs,
-                    lastSwipeDirection = lastSwipeDirection,
-                    liftBehavior = liftBehavior,
-                    onTogglePlay = onTogglePlayPause,
-                    onScrubStart = onScrubStartArm,
-                    onScrubPreview = onScrubPreviewArm,
-                    onScrubEnd = onScrubEndArm,
-                    onLiftedStop = onLiftedStop,
-                    onSwipeNext = onSkipNext,
-                    onSwipePrevious = onSkipPrevious,
-                    modifier = Modifier.fillMaxSize()
-                )
+                AnimatedContent(
+                    targetState = isLyricsVisible,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(250)) togetherWith fadeOut(animationSpec = tween(250))
+                    },
+                    label = "StageOrLyrics"
+                ) { showLyrics ->
+                    if (showLyrics) {
+                        LyricsView(
+                            lyricsState = lyricsState,
+                            textSize = lyricsTextSize,
+                            onLineClick = onSeekToLyric,
+                            onImportClick = onImportLyricsClick,
+                            onOpenOffsetDialog = onOpenOffsetDialog,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        VinylStage(
+                            track = stageTrack,
+                            isPlaying = playerState.isPlaying,
+                            progress = { currentProgress },
+                            durationMs = durationMs,
+                            lastSwipeDirection = lastSwipeDirection,
+                            liftBehavior = liftBehavior,
+                            onTogglePlay = onTogglePlayPause,
+                            onScrubStart = onScrubStartArm,
+                            onScrubPreview = onScrubPreviewArm,
+                            onScrubEnd = onScrubEndArm,
+                            onLiftedStop = onLiftedStop,
+                            onSwipeNext = onSkipNext,
+                            onSwipePrevious = onSkipPrevious,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
             }
 
             // 2. Track Title, Artist & Album Information

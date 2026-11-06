@@ -42,3 +42,4 @@ interface WaveformRepository {
     suspend fun getWaveformCount(): Int
     suspend fun clearWaveformCache()
 }
+

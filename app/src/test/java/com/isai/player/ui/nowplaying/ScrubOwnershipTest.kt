@@ -1,6 +1,7 @@
 package com.isai.player.ui.nowplaying
 
 import com.isai.player.data.repository.FavoritesRepository
+import com.isai.player.data.repository.LyricsRepository
 import com.isai.player.data.repository.SettingsRepository
 import com.isai.player.data.repository.WaveformRepository
 import com.isai.player.playback.PlayerController
@@ -28,6 +29,7 @@ class ScrubOwnershipTest {
     private val favoritesRepository: FavoritesRepository = mockk(relaxed = true)
     private val settingsRepository: SettingsRepository = mockk(relaxed = true)
     private val waveformRepository: WaveformRepository = mockk(relaxed = true)
+    private val lyricsRepository: LyricsRepository = mockk(relaxed = true)
 
     private val playerStateFlow = MutableStateFlow(PlayerState())
     private lateinit var viewModel: NowPlayingViewModel
@@ -40,7 +42,8 @@ class ScrubOwnershipTest {
             playerController = playerController,
             favoritesRepository = favoritesRepository,
             settingsRepository = settingsRepository,
-            waveformRepository = waveformRepository
+            waveformRepository = waveformRepository,
+            lyricsRepository = lyricsRepository
         )
     }
 

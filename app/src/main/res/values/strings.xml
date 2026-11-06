@@ -220,6 +220,15 @@
     <string name="settings_action_clear_waveform_cache">Clear Waveform Cache</string>
     <string name="settings_pregenerate_waveforms">Pre-generate Waveforms While Charging</string>
     <string name="settings_pregenerate_waveforms_desc">Compute waveforms in background when device is plugged in and idle</string>
+    <string name="settings_lyrics_text_size">Lyrics Text Size</string>
+    <string name="settings_lyrics_text_size_desc">Choose preferred display font size for lyrics</string>
+    <string name="settings_lyrics_size_small">Small</string>
+    <string name="settings_lyrics_size_medium">Medium</string>
+    <string name="settings_lyrics_size_large">Large</string>
+    <string name="settings_keep_screen_on_lyrics">Keep Screen On While Viewing Lyrics</string>
+    <string name="settings_keep_screen_on_lyrics_desc">Prevents the display from sleeping during lyrics view</string>
+    <string name="settings_lyrics_count">Lyrics Available</string>
+    <string name="settings_lyrics_count_desc">%1$d songs with lyrics</string>
 
     <string name="settings_section_about">About &amp; Privacy</string>
     <string name="settings_app_version">Version %1$s (Offline Build)</string>
@@ -245,4 +254,14 @@
     <string name="semantics_paused">Paused</string>
     <string name="semantics_vinyl_disc_description">Spinning vinyl record: %1$s by %2$s</string>
     <string name="semantics_vinyl_disc_idle">Vinyl record</string>
+
+    <!-- Lyrics UI -->
+    <string name="action_lyrics">Lyrics</string>
+    <string name="lyrics_offset_title">Lyrics Offset</string>
+    <string name="lyrics_offset_desc">Adjust synchronization timing if lyrics lead or lag behind audio</string>
+    <string name="lyrics_offset_reset">Reset</string>
+    <string name="lyrics_jump_to_current">Jump to current</string>
+    <string name="lyrics_empty_title">No lyrics found</string>
+    <string name="lyrics_empty_desc">Import a synced .lrc or plain .txt file to view lyrics offline</string>
+    <string name="lyrics_action_import">Import Lyrics</string>
 </resources>

@@ -115,3 +115,4 @@ object WaveformMath {
         return bytes
     }
 }
+

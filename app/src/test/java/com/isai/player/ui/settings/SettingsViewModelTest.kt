@@ -3,6 +3,8 @@ package com.isai.player.ui.settings
 import android.net.Uri
 import com.isai.player.data.repository.LibraryRepository
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.LyricsRepository
+import com.isai.player.data.repository.LyricsTextSize
 import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.SettingsRepository
 import com.isai.player.data.repository.ThemeMode
@@ -37,6 +39,7 @@ class SettingsViewModelTest {
     private lateinit var libraryScanner: LibraryScanner
     private lateinit var playerController: PlayerController
     private lateinit var waveformRepository: WaveformRepository
+    private lateinit var lyricsRepository: LyricsRepository
 
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
     private val liftBehaviorFlow = MutableStateFlow(LiftBehavior.PAUSE)
@@ -44,6 +47,9 @@ class SettingsViewModelTest {
     private val seekBarStyleFlow = MutableStateFlow(SeekBarStyle.AUTO)
     private val preGenWaveformsFlow = MutableStateFlow(false)
     private val waveformCountFlow = MutableStateFlow(0)
+    private val lyricsTextSizeFlow = MutableStateFlow(LyricsTextSize.MEDIUM)
+    private val keepScreenOnLyricsFlow = MutableStateFlow(false)
+    private val lyricsCountFlow = MutableStateFlow(0)
     private val folderUriFlow = MutableStateFlow<String?>("content://tree/music")
     private val folderNameFlow = MutableStateFlow<String?>("Music")
     private val scanStateFlow = MutableStateFlow<ScanState>(ScanState.Idle)
@@ -58,13 +64,17 @@ class SettingsViewModelTest {
         libraryScanner = mockk(relaxed = true)
         playerController = mockk(relaxed = true)
         waveformRepository = mockk(relaxed = true)
+        lyricsRepository = mockk(relaxed = true)
 
         every { settingsRepository.themeMode } returns themeModeFlow
         every { settingsRepository.liftBehavior } returns liftBehaviorFlow
         every { settingsRepository.dynamicAccentColor } returns dynamicAccentFlow
         every { settingsRepository.seekBarStyle } returns seekBarStyleFlow
+        every { settingsRepository.lyricsTextSize } returns lyricsTextSizeFlow
+        every { settingsRepository.keepScreenOnWhileLyrics } returns keepScreenOnLyricsFlow
         every { settingsRepository.preGenerateWaveforms } returns preGenWaveformsFlow
         every { waveformRepository.observeWaveformCount() } returns waveformCountFlow
+        every { lyricsRepository.observeLyricsCount() } returns lyricsCountFlow
         every { settingsRepository.selectedFolderUri } returns folderUriFlow
         every { settingsRepository.selectedFolderName } returns folderNameFlow
         every { libraryScanner.scanState } returns scanStateFlow
@@ -84,7 +94,8 @@ class SettingsViewModelTest {
             libraryRepository,
             libraryScanner,
             playerController,
-            waveformRepository
+            waveformRepository,
+            lyricsRepository
         )
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -93,6 +104,7 @@ class SettingsViewModelTest {
         assertEquals(LiftBehavior.PAUSE, state.liftBehavior)
         assertEquals(true, state.dynamicAccentColor)
         assertEquals(SeekBarStyle.AUTO, state.seekBarStyle)
+        assertEquals(LyricsTextSize.MEDIUM, state.lyricsTextSize)
         assertEquals("content://tree/music", state.selectedFolderUri)
         assertEquals("Music", state.selectedFolderName)
     }
@@ -104,7 +116,8 @@ class SettingsViewModelTest {
             libraryRepository,
             libraryScanner,
             playerController,
-            waveformRepository
+            waveformRepository,
+            lyricsRepository
         )
 
         viewModel.setThemeMode(ThemeMode.DARK)
@@ -120,7 +133,8 @@ class SettingsViewModelTest {
             libraryRepository,
             libraryScanner,
             playerController,
-            waveformRepository
+            waveformRepository,
+            lyricsRepository
         )
 
         viewModel.setSeekBarStyle(SeekBarStyle.WAVEFORM_BARS)
@@ -130,13 +144,31 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun setLyricsTextSizeUpdatesRepository() = runTest {
+        val viewModel = SettingsViewModel(
+            settingsRepository,
+            libraryRepository,
+            libraryScanner,
+            playerController,
+            waveformRepository,
+            lyricsRepository
+        )
+
+        viewModel.setLyricsTextSize(LyricsTextSize.LARGE)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { settingsRepository.setLyricsTextSize(LyricsTextSize.LARGE) }
+    }
+
+    @Test
     fun clearWaveformCacheDelegatesToRepository() = runTest {
         val viewModel = SettingsViewModel(
             settingsRepository,
             libraryRepository,
             libraryScanner,
             playerController,
-            waveformRepository
+            waveformRepository,
+            lyricsRepository
         )
 
         viewModel.clearWaveformCache()
@@ -154,7 +186,8 @@ class SettingsViewModelTest {
             libraryRepository,
             libraryScanner,
             playerController,
-            waveformRepository
+            waveformRepository,
+            lyricsRepository
         )
 
         viewModel.purgeMissingTracks()

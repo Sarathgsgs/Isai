@@ -29,6 +29,8 @@ class SettingsRepositoryImpl @Inject constructor(
         val SLEEP_TIMER_STOP_AT_END = booleanPreferencesKey("sleep_timer_stop_at_end")
         val SEEK_BAR_STYLE = stringPreferencesKey("seek_bar_style")
         val PRE_GENERATE_WAVEFORMS = booleanPreferencesKey("pre_generate_waveforms")
+        val LYRICS_TEXT_SIZE = stringPreferencesKey("lyrics_text_size")
+        val KEEP_SCREEN_ON_LYRICS = booleanPreferencesKey("keep_screen_on_lyrics")
     }
 
     private val safePreferences: Flow<Preferences> = dataStore.data
@@ -77,6 +79,15 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override val preGenerateWaveforms: Flow<Boolean> = safePreferences.map { prefs ->
         prefs[PreferencesKeys.PRE_GENERATE_WAVEFORMS] ?: false
+    }
+
+    override val lyricsTextSize: Flow<LyricsTextSize> = safePreferences.map { prefs ->
+        val raw = prefs[PreferencesKeys.LYRICS_TEXT_SIZE] ?: LyricsTextSize.MEDIUM.name
+        runCatching { LyricsTextSize.valueOf(raw) }.getOrDefault(LyricsTextSize.MEDIUM)
+    }
+
+    override val keepScreenOnWhileLyrics: Flow<Boolean> = safePreferences.map { prefs ->
+        prefs[PreferencesKeys.KEEP_SCREEN_ON_LYRICS] ?: false
     }
 
     override suspend fun setThemeMode(mode: ThemeMode) {
@@ -134,6 +145,18 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun setPreGenerateWaveforms(enabled: Boolean) {
         dataStore.edit { prefs ->
             prefs[PreferencesKeys.PRE_GENERATE_WAVEFORMS] = enabled
+        }
+    }
+
+    override suspend fun setLyricsTextSize(size: LyricsTextSize) {
+        dataStore.edit { prefs ->
+            prefs[PreferencesKeys.LYRICS_TEXT_SIZE] = size.name
+        }
+    }
+
+    override suspend fun setKeepScreenOnWhileLyrics(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[PreferencesKeys.KEEP_SCREEN_ON_LYRICS] = enabled
         }
     }
 }

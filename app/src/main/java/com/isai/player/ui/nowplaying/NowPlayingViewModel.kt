@@ -3,9 +3,14 @@ package com.isai.player.ui.nowplaying
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.isai.player.data.lyrics.LrcParser
+import com.isai.player.data.lyrics.LyricsFormat
 import com.isai.player.data.model.Track
 import com.isai.player.data.repository.FavoritesRepository
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.LyricsRepository
+import com.isai.player.data.repository.LyricsState
+import com.isai.player.data.repository.LyricsTextSize
 import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.SettingsRepository
 import com.isai.player.data.repository.WaveformRepository
@@ -42,7 +47,8 @@ class NowPlayingViewModel @Inject constructor(
     private val playerController: PlayerController,
     private val favoritesRepository: FavoritesRepository,
     private val settingsRepository: SettingsRepository,
-    private val waveformRepository: WaveformRepository
+    private val waveformRepository: WaveformRepository,
+    private val lyricsRepository: LyricsRepository
 ) : ViewModel() {
 
     val playerState: StateFlow<PlayerState> = playerController.playerState
@@ -68,6 +74,12 @@ class NowPlayingViewModel @Inject constructor(
     val seekBarStyle: StateFlow<SeekBarStyle> = settingsRepository.seekBarStyle
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SeekBarStyle.AUTO)
 
+    val lyricsTextSize: StateFlow<LyricsTextSize> = settingsRepository.lyricsTextSize
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LyricsTextSize.MEDIUM)
+
+    val keepScreenOnWhileLyrics: StateFlow<Boolean> = settingsRepository.keepScreenOnWhileLyrics
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val sleepTimerRemainingMs: StateFlow<Long> = playerController.sleepTimer.remainingMs
     val isStopAtEndOfTrack: StateFlow<Boolean> = playerController.sleepTimer.isStopAtEndOfTrack
 
@@ -86,6 +98,29 @@ class NowPlayingViewModel @Inject constructor(
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WaveformState.Loading)
+
+    val isLyricsVisible = MutableStateFlow(false)
+
+    val lyricsState: StateFlow<LyricsState> = playerState
+        .flatMapLatest { state ->
+            val track = state.currentTrack
+            if (track != null) {
+                lyricsRepository.observeLyrics(track).map { parsed ->
+                    if (parsed == null || parsed.lines.isEmpty()) {
+                        LyricsState.Empty
+                    } else if (parsed.format == LyricsFormat.SYNCED) {
+                        val effectiveTime = state.positionMs + parsed.offsetMs
+                        val activeIndex = LrcParser.lineIndexAt(parsed.lines, effectiveTime)
+                        LyricsState.Synced(parsed.lines, activeIndex, parsed.offsetMs)
+                    } else {
+                        LyricsState.Plain(parsed.lines.map { it.text })
+                    }
+                }
+            } else {
+                flowOf(LyricsState.Empty)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LyricsState.Loading)
 
     private val _scrubOwner = MutableStateFlow(ScrubOwner.NONE)
     val scrubOwner: StateFlow<ScrubOwner> = _scrubOwner.asStateFlow()
@@ -116,6 +151,29 @@ class NowPlayingViewModel @Inject constructor(
 
     fun togglePlayPause() {
         playerController.togglePlayPause()
+    }
+
+    fun toggleLyricsView() {
+        isLyricsVisible.value = !isLyricsVisible.value
+    }
+
+    fun setLyricsOffset(offsetMs: Int) {
+        val currentId = playerState.value.currentTrack?.id ?: return
+        viewModelScope.launch {
+            lyricsRepository.updateLyricsOffset(currentId, offsetMs)
+        }
+    }
+
+    fun importLyrics(rawText: String) {
+        val currentId = playerState.value.currentTrack?.id ?: return
+        viewModelScope.launch {
+            lyricsRepository.importLyrics(currentId, rawText)
+        }
+    }
+
+    fun seekToLyricTimestamp(timestampMs: Long) {
+        playerController.seekTo(timestampMs)
+        playerController.play()
     }
 
     fun onScrubStart(owner: ScrubOwner = ScrubOwner.NONE) {

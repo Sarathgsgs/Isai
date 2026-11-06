@@ -8,6 +8,7 @@ import com.isai.player.data.db.dao.ArtistDao
 import com.isai.player.data.db.dao.FavoriteDao
 import com.isai.player.data.db.dao.FolderDao
 import com.isai.player.data.db.dao.HistoryDao
+import com.isai.player.data.db.dao.LyricsDao
 import com.isai.player.data.db.dao.PlaylistDao
 import com.isai.player.data.db.dao.QueueDao
 import com.isai.player.data.db.dao.TrackDao
@@ -33,7 +34,10 @@ object DatabaseModule {
             IsaiDatabase::class.java,
             IsaiDatabase.DATABASE_NAME
         )
-            .addMigrations(IsaiDatabase.MIGRATION_1_2)
+            .addMigrations(
+                IsaiDatabase.MIGRATION_1_2,
+                IsaiDatabase.MIGRATION_2_3
+            )
             .build()
     }
 
@@ -63,4 +67,7 @@ object DatabaseModule {
 
     @Provides
     fun provideWaveformDao(database: IsaiDatabase): WaveformDao = database.waveformDao()
+
+    @Provides
+    fun provideLyricsDao(database: IsaiDatabase): LyricsDao = database.lyricsDao()
 }

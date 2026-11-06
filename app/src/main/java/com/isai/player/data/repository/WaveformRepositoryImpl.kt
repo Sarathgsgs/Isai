@@ -146,3 +146,4 @@ class WaveformRepositoryImpl @Inject constructor(
         waveformDao.clearAllWaveforms()
     }
 }
+

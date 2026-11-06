@@ -9,11 +9,13 @@ import com.isai.player.data.db.dao.ArtistDao
 import com.isai.player.data.db.dao.FavoriteDao
 import com.isai.player.data.db.dao.FolderDao
 import com.isai.player.data.db.dao.HistoryDao
+import com.isai.player.data.db.dao.LyricsDao
 import com.isai.player.data.db.dao.PlaylistDao
 import com.isai.player.data.db.dao.QueueDao
 import com.isai.player.data.db.dao.TrackDao
 import com.isai.player.data.db.dao.WaveformDao
 import com.isai.player.data.db.entity.FavoriteEntity
+import com.isai.player.data.db.entity.LyricsEntity
 import com.isai.player.data.db.entity.PlayHistoryEntity
 import com.isai.player.data.db.entity.PlaylistEntity
 import com.isai.player.data.db.entity.PlaylistTrackEntity
@@ -29,9 +31,10 @@ import com.isai.player.data.db.entity.WaveformEntity
         FavoriteEntity::class,
         PlayHistoryEntity::class,
         QueueItemEntity::class,
-        WaveformEntity::class
+        WaveformEntity::class,
+        LyricsEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class IsaiDatabase : RoomDatabase() {
@@ -45,6 +48,7 @@ abstract class IsaiDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
     abstract fun queueDao(): QueueDao
     abstract fun waveformDao(): WaveformDao
+    abstract fun lyricsDao(): LyricsDao
 
     companion object {
         const val DATABASE_NAME = "isai_player.db"
@@ -59,6 +63,25 @@ abstract class IsaiDatabase : RoomDatabase() {
                         `peaks` BLOB NOT NULL,
                         `version` INTEGER NOT NULL,
                         `created_at` INTEGER NOT NULL,
+                        PRIMARY KEY(`track_id`),
+                        FOREIGN KEY(`track_id`) REFERENCES `tracks`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `lyrics` (
+                        `track_id` INTEGER NOT NULL,
+                        `source` TEXT NOT NULL,
+                        `format` TEXT NOT NULL,
+                        `content` TEXT NOT NULL,
+                        `offset_ms` INTEGER NOT NULL DEFAULT 0,
+                        `last_modified` INTEGER NOT NULL,
                         PRIMARY KEY(`track_id`),
                         FOREIGN KEY(`track_id`) REFERENCES `tracks`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
                     )

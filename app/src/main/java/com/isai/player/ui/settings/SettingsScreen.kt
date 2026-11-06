@@ -65,6 +65,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isai.player.R
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.LyricsTextSize
 import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.ThemeMode
 import com.isai.player.ui.components.IsaiChip
@@ -269,6 +270,98 @@ fun SettingsScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Lyrics Text Size
+                    Text(
+                        text = stringResource(id = R.string.settings_lyrics_text_size),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = IsaiTheme.colors.onBackground
+                    )
+                    Text(
+                        text = stringResource(id = R.string.settings_lyrics_text_size_desc),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IsaiTheme.colors.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        LyricsTextSize.entries.forEach { size ->
+                            val label = when (size) {
+                                LyricsTextSize.SMALL -> stringResource(id = R.string.settings_lyrics_size_small)
+                                LyricsTextSize.MEDIUM -> stringResource(id = R.string.settings_lyrics_size_medium)
+                                LyricsTextSize.LARGE -> stringResource(id = R.string.settings_lyrics_size_large)
+                            }
+                            IsaiChip(
+                                selected = state.lyricsTextSize == size,
+                                onClick = { viewModel.setLyricsTextSize(size) },
+                                label = label
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Keep Screen On While Viewing Lyrics
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(id = R.string.settings_keep_screen_on_lyrics),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = IsaiTheme.colors.onBackground
+                            )
+                            Text(
+                                text = stringResource(id = R.string.settings_keep_screen_on_lyrics_desc),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = IsaiTheme.colors.onSurfaceVariant
+                            )
+                        }
+
+                        Switch(
+                            checked = state.keepScreenOnWhileLyrics,
+                            onCheckedChange = { viewModel.setKeepScreenOnWhileLyrics(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = IsaiTheme.colors.onAccent,
+                                checkedTrackColor = IsaiTheme.colors.accent,
+                                uncheckedThumbColor = IsaiTheme.colors.onSurfaceVariant,
+                                uncheckedTrackColor = IsaiTheme.colors.surfaceVariant
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Lyrics Library Stats
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(id = R.string.settings_lyrics_count),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = IsaiTheme.colors.onBackground
+                            )
+                            Text(
+                                text = stringResource(id = R.string.settings_lyrics_count_desc, state.lyricsCount),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = IsaiTheme.colors.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
@@ -533,6 +626,29 @@ fun SettingsScreen(
                                 uncheckedTrackColor = IsaiTheme.colors.surfaceVariant
                             )
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Lyrics Library Stats
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(id = R.string.settings_lyrics_count),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = IsaiTheme.colors.onBackground
+                            )
+                            Text(
+                                text = stringResource(id = R.string.settings_lyrics_count_desc, state.lyricsCount),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = IsaiTheme.colors.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

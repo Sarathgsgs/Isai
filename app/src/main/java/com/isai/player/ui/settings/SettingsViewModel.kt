@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.isai.player.data.repository.LibraryRepository
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.LyricsRepository
+import com.isai.player.data.repository.LyricsTextSize
 import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.SettingsRepository
 import com.isai.player.data.repository.ThemeMode
@@ -27,6 +29,8 @@ data class SettingsUiState(
     val liftBehavior: LiftBehavior = LiftBehavior.PAUSE,
     val dynamicAccentColor: Boolean = true,
     val seekBarStyle: SeekBarStyle = SeekBarStyle.AUTO,
+    val lyricsTextSize: LyricsTextSize = LyricsTextSize.MEDIUM,
+    val keepScreenOnWhileLyrics: Boolean = false,
     val selectedFolderUri: String? = null,
     val selectedFolderName: String? = null,
     val isScanning: Boolean = false,
@@ -35,7 +39,8 @@ data class SettingsUiState(
     val sleepTimerRemainingMs: Long = 0L,
     val isStopAtEndOfTrack: Boolean = false,
     val waveformCount: Int = 0,
-    val preGenerateWaveforms: Boolean = false
+    val preGenerateWaveforms: Boolean = false,
+    val lyricsCount: Int = 0
 )
 
 @HiltViewModel
@@ -44,7 +49,8 @@ class SettingsViewModel @Inject constructor(
     private val libraryRepository: LibraryRepository,
     private val libraryScanner: LibraryScanner,
     private val playerController: PlayerController,
-    private val waveformRepository: WaveformRepository
+    private val waveformRepository: WaveformRepository,
+    private val lyricsRepository: LyricsRepository
 ) : ViewModel() {
 
     private val scanMessageFlow = MutableStateFlow<String?>(null)
@@ -55,8 +61,11 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.liftBehavior,
         settingsRepository.dynamicAccentColor,
         settingsRepository.seekBarStyle,
+        settingsRepository.lyricsTextSize,
+        settingsRepository.keepScreenOnWhileLyrics,
         settingsRepository.preGenerateWaveforms,
         waveformRepository.observeWaveformCount(),
+        lyricsRepository.observeLyricsCount(),
         settingsRepository.selectedFolderUri,
         settingsRepository.selectedFolderName,
         libraryScanner.scanState,
@@ -66,12 +75,15 @@ class SettingsViewModel @Inject constructor(
         val lift = args[1] as LiftBehavior
         val dynamicAccent = args[2] as Boolean
         val seekStyle = args[3] as SeekBarStyle
-        val preGenWaveforms = args[4] as Boolean
-        val waveCount = args[5] as Int
-        val folderUri = args[6] as String?
-        val folderName = args[7] as String?
-        val scanState = args[8] as ScanState
-        val scanMsg = args[9] as String?
+        val textSize = args[4] as LyricsTextSize
+        val keepScreenOn = args[5] as Boolean
+        val preGenWaveforms = args[6] as Boolean
+        val waveCount = args[7] as Int
+        val lyricsCount = args[8] as Int
+        val folderUri = args[9] as String?
+        val folderName = args[10] as String?
+        val scanState = args[11] as ScanState
+        val scanMsg = args[12] as String?
 
         val isScanning = scanState is ScanState.Scanning
         val statusMsg = when (scanState) {
@@ -85,6 +97,8 @@ class SettingsViewModel @Inject constructor(
             liftBehavior = lift,
             dynamicAccentColor = dynamicAccent,
             seekBarStyle = seekStyle,
+            lyricsTextSize = textSize,
+            keepScreenOnWhileLyrics = keepScreenOn,
             selectedFolderUri = folderUri,
             selectedFolderName = folderName,
             isScanning = isScanning,
@@ -93,7 +107,8 @@ class SettingsViewModel @Inject constructor(
             sleepTimerRemainingMs = playerController.sleepTimer.remainingMs.value,
             isStopAtEndOfTrack = playerController.sleepTimer.isStopAtEndOfTrack.value,
             waveformCount = waveCount,
-            preGenerateWaveforms = preGenWaveforms
+            preGenerateWaveforms = preGenWaveforms,
+            lyricsCount = lyricsCount
         )
     }.stateIn(
         scope = viewModelScope,
@@ -122,6 +137,18 @@ class SettingsViewModel @Inject constructor(
     fun setSeekBarStyle(style: SeekBarStyle) {
         viewModelScope.launch {
             settingsRepository.setSeekBarStyle(style)
+        }
+    }
+
+    fun setLyricsTextSize(size: LyricsTextSize) {
+        viewModelScope.launch {
+            settingsRepository.setLyricsTextSize(size)
+        }
+    }
+
+    fun setKeepScreenOnWhileLyrics(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setKeepScreenOnWhileLyrics(enabled)
         }
     }
 

@@ -129,3 +129,4 @@ class WaveformRepositoryTest {
         coVerify(exactly = 0) { waveformExtractor.extract(any(), any(), any(), any()) }
     }
 }
+

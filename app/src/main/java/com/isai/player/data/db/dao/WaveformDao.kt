@@ -31,3 +31,4 @@ interface WaveformDao {
     @Query("SELECT COUNT(*) FROM waveforms")
     suspend fun getWaveformCount(): Int
 }
+
