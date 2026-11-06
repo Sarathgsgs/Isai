@@ -39,6 +39,9 @@ sealed interface NavRoute {
     data object Settings : NavRoute
 
     @Serializable
+    data object Equalizer : NavRoute
+
+    @Serializable
     data object LabsDashboard : NavRoute
 
     @Serializable

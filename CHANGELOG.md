@@ -5,6 +5,33 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0-equalizer] - 2026-11-06
+### Added
+- Add-on Round 2 / Prompt S: Complete Equalizer and Audio Effects Engine with dynamic device band probing, log-frequency Catmull-Rom spline curve, automatic clipping compensation, and system panel interop.
+- Audio Effects Engine (`AudioEffectsManager`):
+  - Hardware effects attached to ExoPlayer's `audioSessionId` (`android.media.audiofx.Equalizer`, `BassBoost`, `Virtualizer`, `LoudnessEnhancer`).
+  - Safe lifecycle management: Re-attaches seamlessly on `onAudioSessionIdChanged` and cleans up on release.
+  - Probes device hardware capabilities without hardcoding band counts or ranges (supports 5, 8, 10, or variable device bands and ranges).
+  - Broadcasts `ACTION_OPEN_AUDIO_EFFECT_SESSION_ID` and `ACTION_CLOSE_AUDIO_EFFECT_SESSION_ID` for system-wide DSP compatibility.
+- Log-Frequency Preset Resampling (`EqPresetResampler`):
+  - 14 built-in acoustic and genre presets (Flat, Bass Boost, Bass Reducer, Treble Boost, Vocal, Rock, Pop, Jazz, Classical, Electronic, Hip-Hop, Loud, Acoustic, Late Night).
+  - Resamples normalized 10-band octave reference curves to device hardware center frequencies using log-frequency interpolation ($x = \log_{10}(f)$).
+- Preamp & "Prevent Clipping" Auto-Compensation (`ClippingMath`):
+  - Digital preamp gain control from $-12.0\text{ dB}$ to $+12.0\text{ dB}$ (0.5 dB steps).
+  - Auto-headroom analysis: When positive EQ/preamp boosts are applied, automatically computes dynamic digital attenuation factor ($10^{-\text{boost}/20}$) to prevent inter-sample distortion and digital clipping.
+  - Informative UI badge displaying active headroom protection or clipping warning.
+- Interactive Equalizer UI (`EqualizerScreen`, `EqCurveView`):
+  - Smooth Catmull-Rom spline Canvas curve passing directly through band coordinates with glowing accent fill.
+  - Interactive draggable band nodes with haptic feedback tick upon crossing $0\text{ dB}$.
+  - Synchronized vertical band sliders with $0.5\text{ dB}$ resolution.
+  - Bass Boost (0 - 100%) and Virtualizer (0 - 100%) sliders.
+  - Preset selector chip carousel with Custom Preset creation and persistence in DataStore.
+  - "Open System Equalizer" intent launcher for OEM audio panels.
+- Unit Tests:
+  - `EqPresetResamplerTest`: Tests flat, bass boost, boundary clamping, and extrapolation across 5 and 10 band targets.
+  - `ClippingCompensationTest`: Validates headroom analysis, auto-attenuation scaling, and clipping detection.
+  - `EqualizerRepositoryTest`: Tests DataStore persistence, default states, and custom preset serialization.
+
 ## [1.1.0] - 2026-11-06
 ### Added
 - **Add-on Round 1 Major Release**: Delivers audio waveform extraction with interactive seekbar, complete offline synced lyrics, and responsive Jetpack Glance home-screen widget.

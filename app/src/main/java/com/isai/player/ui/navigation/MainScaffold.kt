@@ -208,7 +208,14 @@ fun MainScaffold(
                         currentThemeMode = currentThemeMode,
                         onThemeModeChange = onThemeModeChange,
                         onBackClick = { navController.popBackStack() },
-                        onOpenLabsClick = { navController.navigate(NavRoute.LabsDashboard) }
+                        onOpenLabsClick = { navController.navigate(NavRoute.LabsDashboard) },
+                        onOpenEqualizerClick = { navController.navigate(NavRoute.Equalizer) }
+                    )
+                }
+
+                composable<NavRoute.Equalizer> {
+                    com.isai.player.ui.equalizer.EqualizerScreen(
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
 

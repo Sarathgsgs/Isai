@@ -33,6 +33,9 @@ class PlaybackService : MediaSessionService() {
     @Inject
     lateinit var sleepTimer: SleepTimer
 
+    @Inject
+    lateinit var audioEffectsManager: com.isai.player.playback.audio.AudioEffectsManager
+
     private var exoPlayer: ExoPlayer? = null
     private var mediaSession: MediaSession? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -55,6 +58,7 @@ class PlaybackService : MediaSessionService() {
             .build()
 
         exoPlayer = player
+        audioEffectsManager.attachPlayer(player)
 
         // Activity launch PendingIntent when user taps notification
         val sessionActivityIntent = Intent(this, MainActivity::class.java).apply {
@@ -119,6 +123,10 @@ class PlaybackService : MediaSessionService() {
                     }
                 }
             }
+
+            override fun onAudioSessionIdChanged(audioSessionId: Int) {
+                audioEffectsManager.onAudioSessionIdChanged(audioSessionId)
+            }
         })
 
         // Restore previous queue on cold start
@@ -137,6 +145,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        audioEffectsManager.releaseEffects()
         serviceScope.cancel()
         mediaSession?.run {
             player.release()

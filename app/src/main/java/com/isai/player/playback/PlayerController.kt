@@ -2,12 +2,16 @@ package com.isai.player.playback
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.media.audiofx.AudioEffect
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import com.isai.player.data.equalizer.EffectCapabilities
 import com.isai.player.data.model.Track
+import com.isai.player.playback.audio.AudioEffectsManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,15 +32,37 @@ class PlayerController @Inject constructor(
     @ApplicationContext private val context: Context,
     private val queueStore: QueueStore,
     private val playHistoryTracker: PlayHistoryTracker,
-    val sleepTimer: SleepTimer
+    val sleepTimer: SleepTimer,
+    val audioEffectsManager: AudioEffectsManager
 ) {
 
     private val controllerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var mediaController: MediaController? = null
     private var positionTickerJob: Job? = null
 
+    val effectCapabilities: StateFlow<EffectCapabilities> = audioEffectsManager.capabilities
+
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
+
+    fun launchSystemEqualizer(ctx: Context): Boolean {
+        val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
+            putExtra(AudioEffect.EXTRA_AUDIO_SESSION, audioEffectsManager.currentSessionId)
+            putExtra(AudioEffect.EXTRA_PACKAGE_NAME, ctx.packageName)
+            putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        return try {
+            if (intent.resolveActivity(ctx.packageManager) != null) {
+                ctx.startActivity(intent)
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     init {
         connectToService()

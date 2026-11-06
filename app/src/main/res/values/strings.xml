@@ -268,4 +268,23 @@
     <!-- AppWidget -->
     <string name="widget_name">Isai Turntable</string>
     <string name="widget_description">Interactive vinyl record and tonearm playback controls for your home screen</string>
+
+    <!-- Equalizer & Audio Effects -->
+    <string name="settings_equalizer">Equalizer &amp; Audio Effects</string>
+    <string name="settings_equalizer_desc">Customize multi-band frequency curves, bass boost, and preamp</string>
+    <string name="equalizer_title">Equalizer</string>
+    <string name="equalizer_bands_header">Frequency Bands</string>
+    <string name="equalizer_effects_header">Audio Effects &amp; Headroom</string>
+    <string name="equalizer_bass_boost">Bass Boost</string>
+    <string name="equalizer_virtualizer">Virtualizer</string>
+    <string name="equalizer_preamp">Preamp Gain</string>
+    <string name="equalizer_prevent_clipping">Prevent Clipping</string>
+    <string name="equalizer_prevent_clipping_desc">Automatically attenuates digital headroom to avoid inter-sample distortion</string>
+    <string name="equalizer_clipping_protected">Headroom protected: auto-attenuated by %1$s dB</string>
+    <string name="equalizer_clipping_warning">Warning: High positive gain may cause digital clipping and audio distortion</string>
+    <string name="equalizer_open_system">Open System Equalizer</string>
+    <string name="equalizer_save_preset">Save</string>
+    <string name="equalizer_save_custom_preset_title">Save Custom Preset</string>
+    <string name="equalizer_save_custom_preset_prompt">Enter a name for your custom equalizer curve:</string>
+    <string name="equalizer_preset_name_placeholder">e.g. Warm Acoustic</string>
 </resources>

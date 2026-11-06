@@ -124,3 +124,4 @@ class AddOnRound1ContractTest {
         assertTrue(updater.shouldTriggerUpdate(11_000L, 1L, true, 1L, true, 1000L))
     }
 }
+
