@@ -102,3 +102,4 @@ class AddOnRound2ContractTest {
         assertTrue(m3u.contains("Artists/Song.flac"))
     }
 }
+
