@@ -59,7 +59,12 @@ class LibraryRepositoryImpl @Inject constructor(
     }
 
     override fun observeTracksForAlbum(album: String, albumArtist: String): Flow<List<Track>> {
-        return albumDao.observeTracksForAlbum(album, albumArtist).map { list -> list.map(TrackEntity::toDomain) }
+        val flow = if (albumArtist.isBlank()) {
+            albumDao.observeTracksForAlbum(album)
+        } else {
+            albumDao.observeTracksForAlbum(album, albumArtist)
+        }
+        return flow.map { list -> list.map(TrackEntity::toDomain) }
     }
 
     override fun observeArtists(sortBy: ArtistSortOrder): Flow<List<Artist>> {

@@ -18,7 +18,7 @@ interface LibraryRepository {
     fun searchTracks(query: String): Flow<List<Track>>
 
     fun observeAlbums(sortBy: AlbumSortOrder = AlbumSortOrder.TITLE_ASC): Flow<List<Album>>
-    fun observeTracksForAlbum(album: String, albumArtist: String): Flow<List<Track>>
+    fun observeTracksForAlbum(album: String, albumArtist: String = ""): Flow<List<Track>>
 
     fun observeArtists(sortBy: ArtistSortOrder = ArtistSortOrder.NAME_ASC): Flow<List<Artist>>
     fun observeTracksForArtist(artist: String): Flow<List<Track>>

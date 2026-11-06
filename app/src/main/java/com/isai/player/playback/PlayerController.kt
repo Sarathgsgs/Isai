@@ -212,6 +212,12 @@ class PlayerController @Inject constructor(
     }
 
     // Queue Management
+    fun playTracks(tracks: List<Track>, startIndex: Int = 0) {
+        if (tracks.isEmpty()) return
+        val validIndex = startIndex.coerceIn(0, tracks.lastIndex)
+        playTrack(tracks[validIndex], tracks, validIndex)
+    }
+
     fun playTrack(track: Track, queue: List<Track>, startIndex: Int = queue.indexOfFirst { it.id == track.id }.coerceAtLeast(0)) {
         val player = mediaController ?: return
         val mediaItems = queue.map(MediaItemMapper::toMediaItem)

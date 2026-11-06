@@ -5,6 +5,37 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0-home-library-search] - 2026-11-06
+### Added
+- Phase 3 / Prompt I: Complete Home, Library, Detail screens (Album & Artist), Search screen, and Track action menu.
+- `HomeScreen` & `HomeViewModel`:
+  - "Shuffle All" hero card with instant library shuffle playback.
+  - "Played Recently" horizontal carousel driven by `HistoryRepository.observeRecentlyPlayed(limit = 20)`.
+  - Library overview statistic cards (Songs, Albums, Artists).
+- `LibraryScreen` & `LibraryViewModel`:
+  - 5 primary tabs: **Songs**, **Albums**, **Artists**, **Playlists**, and **Folders**.
+  - Dropdown sort menu for Songs: Title (A-Z), Artist (A-Z), Album (A-Z), Year (Newest), and Recently Added.
+  - 2-column adaptive grid for Albums with `AlbumCard`s and navigation to Album Detail.
+  - Artists tab with circular avatars, track/album count subtitles, and navigation to Artist Detail.
+  - Custom playlists and folder directory listing with track counts.
+- `AlbumDetailScreen` & `AlbumDetailViewModel`:
+  - Signature peeking vinyl record hero header (album jacket with a scaled `VinylDisc` partially exposed at $12^\circ$ tilt).
+  - Release year, track count, and total duration metadata summary.
+  - "Play All" and "Shuffle" action buttons.
+  - Multi-disc grouped track listing (`Disc 1`, `Disc 2`) with track indices, titles, artists, and durations.
+- `ArtistDetailScreen` & `ArtistDetailViewModel`:
+  - Circular artist avatar hero banner with artist discography statistics.
+  - "Discography" horizontal carousel of albums.
+  - "All Songs" listing by the artist with 3-dot context menu.
+- `SearchScreen` & `SearchViewModel`:
+  - Interactive search bar with instant clear icon and 300ms debounce.
+  - Categorized offline search results: Songs, Albums, and Artists.
+  - Clean empty search state and no-results feedback.
+- `TrackMenuBottomSheet` & `TrackInfoDialog`:
+  - Standard modal bottom sheet for all track rows: "Play Next", "Add to Queue", "Favorite" toggle, and "Song Info".
+  - Dialog displaying full track metadata: file format, size, duration, folder path, and release year.
+- Comprehensive unit test suites: `HomeViewModelTest`, `LibraryViewModelTest`, `SearchViewModelTest`, `AlbumDetailViewModelTest`, and `ArtistDetailViewModelTest`.
+
 ## [0.10.0-nowplaying-integration] - 2026-11-06
 ### Added
 - Phase 3 / Prompt H: Full Now Playing integration with live VinylStage, interactive seekbar, ControlDial, QueueBottomSheet, and live MiniPlayer.

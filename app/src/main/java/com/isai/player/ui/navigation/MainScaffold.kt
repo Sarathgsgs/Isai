@@ -141,6 +141,12 @@ fun MainScaffold(
                     LibraryScreen(
                         onTrackClick = {
                             navController.navigate(NavRoute.NowPlaying)
+                        },
+                        onAlbumClick = { albumKey ->
+                            navController.navigate(NavRoute.AlbumDetail(albumKey))
+                        },
+                        onArtistClick = { artistKey ->
+                            navController.navigate(NavRoute.ArtistDetail(artistKey))
                         }
                     )
                 }
@@ -150,7 +156,17 @@ fun MainScaffold(
                 }
 
                 composable<NavRoute.Search> {
-                    SearchScreen()
+                    SearchScreen(
+                        onTrackClick = {
+                            navController.navigate(NavRoute.NowPlaying)
+                        },
+                        onAlbumClick = { albumKey ->
+                            navController.navigate(NavRoute.AlbumDetail(albumKey))
+                        },
+                        onArtistClick = { artistKey ->
+                            navController.navigate(NavRoute.ArtistDetail(artistKey))
+                        }
+                    )
                 }
 
                 composable<NavRoute.AlbumDetail> { backStackEntry ->
@@ -165,7 +181,10 @@ fun MainScaffold(
                     val route: NavRoute.ArtistDetail = backStackEntry.toRoute()
                     ArtistDetailScreen(
                         artistKey = route.artistKey,
-                        onBackClick = { navController.popBackStack() }
+                        onBackClick = { navController.popBackStack() },
+                        onAlbumClick = { albumKey ->
+                            navController.navigate(NavRoute.AlbumDetail(albumKey))
+                        }
                     )
                 }
 
