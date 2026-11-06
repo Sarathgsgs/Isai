@@ -5,6 +5,17 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0-settings-theming-polish] - 2026-11-06
+### Added
+- Phase 3 / Prompt K: Production Settings screen, Theming polish, Library maintenance, Vinyl needle-lift preferences, and WCAG AA accessibility compliance.
+- `SettingsScreen` & `SettingsViewModel`:
+  - Appearance: System, Dark, and Light theme modes with immediate reactivity, and Dynamic Accent color switch.
+  - Vinyl & Playback: Tonearm needle-lift physics preference (`Pause` vs `Stop & Rewind to 0:00`), and Sleep Timer configuration shortcut.
+  - Library Management: Active SAF music folder display, "Rescan Library" trigger with progress indicators, "Change Folder" document tree picker, and "Clean Missing Songs" with confirmation dialog.
+  - About & Privacy: Version display, 100% Offline Guarantee badge highlighting zero internet permissions and zero telemetry, and Component Labs testing shortcut.
+  - Accessibility: WCAG AA contrast compliance ($\ge 4.5:1$) across dark and light themes, and resilient 200% Android system font scaling.
+- Unit tests: `SettingsViewModelTest` validating preference dispatching, library purging, and sleep timer delegation.
+
 ## [0.12.0-favorites-playlists-sleep-timer] - 2026-11-06
 ### Added
 - Phase 3 / Prompt J: Offline Favorites screen, Playlist lifecycle management (Create, Rename, Delete, Reorder, Add), Multi-select Track Picker, and Sleep Timer UI dialog.
