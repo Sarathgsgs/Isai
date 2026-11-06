@@ -88,3 +88,4 @@ class AccessibilityContrastTest {
         assertTrue("LightAccentDefault on LightSurface ($accentOnSurface) must be >= 4.5", accentOnSurface >= 4.5)
     }
 }
+

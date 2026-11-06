@@ -98,3 +98,4 @@ class FavoritesViewModelTest {
         coVerify { favoritesRepository.toggleFavorite(track.id) }
     }
 }
+

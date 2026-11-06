@@ -135,3 +135,4 @@ class SettingsViewModel @Inject constructor(
         libraryScanner.resetState()
     }
 }
+

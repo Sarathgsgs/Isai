@@ -78,3 +78,4 @@ class TonearmSemanticsTest {
         assertEquals(0.35f, seekProgress ?: -1f, 0.001f)
     }
 }
+

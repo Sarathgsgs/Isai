@@ -166,3 +166,4 @@ class SettingsViewModelTest {
         verify { playerController.cancelSleepTimer() }
     }
 }
+
