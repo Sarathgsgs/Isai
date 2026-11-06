@@ -1,0 +1,55 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.75"
+        android:scaleY="0.75"
+        android:translateX="13.5"
+        android:translateY="13.5">
+        <!-- Vinyl Disc Body -->
+        <path
+            android:fillColor="#16161B"
+            android:pathData="M54,54m-44,0a44,44 0,1 1,88 0a44,44 0,1 1,-88 0" />
+
+        <!-- Outer Rim Highlight -->
+        <path
+            android:strokeColor="#3A3E48"
+            android:strokeWidth="1.2"
+            android:pathData="M54,54m-42,0a42,42 0,1 1,84 0a42,42 0,1 1,-84 0" />
+
+        <!-- Concentric Grooves -->
+        <path
+            android:strokeColor="#272B35"
+            android:strokeWidth="0.8"
+            android:pathData="M54,54m-35,0a35,35 0,1 1,70 0a35,35 0,1 1,-70 0" />
+        <path
+            android:strokeColor="#22252E"
+            android:strokeWidth="0.8"
+            android:pathData="M54,54m-29,0a29,29 0,1 1,58 0a29,29 0,1 1,-58 0" />
+        <path
+            android:strokeColor="#272B35"
+            android:strokeWidth="0.8"
+            android:pathData="M54,54m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+
+        <!-- Center Label (Accent Orange) -->
+        <path
+            android:fillColor="#FF8A3D"
+            android:pathData="M54,54m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0" />
+
+        <!-- Spindle Ring & Hole -->
+        <path
+            android:strokeColor="#A9AFBA"
+            android:strokeWidth="0.8"
+            android:pathData="M54,54m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+        <path
+            android:fillColor="#0B0B0E"
+            android:pathData="M54,54m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0" />
+
+        <!-- Stylized Music Note -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M51.5,49v7.5a2.5,2.5 0,1 1,-2,-2.4v-5.6l6,-1.5v6.2a2.5,2.5 0,1 1,-2,-2.4v-7.3z" />
+    </group>
+</vector>
