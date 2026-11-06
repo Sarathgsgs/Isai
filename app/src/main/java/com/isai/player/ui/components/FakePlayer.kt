@@ -1,5 +1,6 @@
 package com.isai.player.ui.components
 
+import com.isai.player.data.repository.LiftBehavior
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -8,11 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-
-enum class LiftBehavior {
-    PAUSE,
-    STOP
-}
 
 /**
  * Lightweight fake player simulating realistic audio playback and timeline state

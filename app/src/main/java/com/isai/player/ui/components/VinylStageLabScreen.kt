@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isai.player.R
+import com.isai.player.data.repository.LiftBehavior
 import com.isai.player.data.repository.ThemeMode
 import com.isai.player.ui.theme.CardShape
 import com.isai.player.ui.theme.IsaiTheme
@@ -479,3 +480,4 @@ fun VinylStageLabScreen(
 private fun VinylStageLabScreenPreview() {
     VinylStageLabScreen(onBackClick = {})
 }
+

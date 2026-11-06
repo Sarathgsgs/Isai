@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.isai.player.data.repository.LiftBehavior
 import com.isai.player.ui.theme.IsaiTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -316,3 +317,4 @@ fun VinylStage(
         )
     }
 }
+

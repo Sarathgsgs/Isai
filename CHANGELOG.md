@@ -5,6 +5,28 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0-data-layer] - 2026-11-06
+### Added
+- Phase 3 / Prompt E: Room database architecture, DAOs, repositories, and typed DataStore settings.
+- `Fnv1a`: 64-bit Fowler-Noll-Vo deterministic URI hashing engine for stable, collision-resilient primary keys without auto-increment dependencies.
+- Room entities with foreign key cascades:
+  - `TrackEntity` (with indexed sorting columns, metadata, art cache path, folder path, missing track flag, and forward-compatible fields for Lyrics and M3U).
+  - `PlaylistEntity` and `PlaylistTrackEntity` (composite foreign keys with cascade deletion and explicit position ordering).
+  - `FavoriteEntity` (cascade on track deletion).
+  - `PlayHistoryEntity` (timestamped playback logging).
+  - `QueueItemEntity` (queue restoration on cold start).
+- Aggregate projections for derived grouping: `AlbumProjection`, `ArtistProjection`, `FolderProjection`, and `PlaylistWithCount`.
+- Comprehensive Room DAOs:
+  - `TrackDao` with 8 sort variants, missing track pruning, and search.
+  - `AlbumDao`, `ArtistDao`, `FolderDao` with group-by projections.
+  - `FavoriteDao` with atomic toggle.
+  - `PlaylistDao` with track ordering, reordering, and cascades.
+  - `HistoryDao` and `QueueDao`.
+- Clean domain models (`Track`, `Album`, `Artist`, `Folder`, `Playlist`, `QueueSnapshot`, `HistoryEntry`) and bidirectional mappers.
+- Production `SettingsRepository` backed by AndroidX DataStore Preferences managing `themeMode`, `liftBehavior`, `selectedFolderUri`, `selectedFolderName`, `dynamicAccentColor`, and `sleepTimer`.
+- Hilt DI modules: `DatabaseModule`, `RepositoryModule`, and `DataStoreModule`.
+- Full unit test suite: `Fnv1aTest`, `TrackEntityMappingTest`, `IsaiDatabaseTest`, and `SettingsRepositoryTest`.
+
 ## [0.6.0-vinyl-stage] - 2026-11-06
 ### Added
 - Phase 2 / Prompt D: VinylStage unified assembly, gesture arbitration, and `VinylStageLabScreen`.
