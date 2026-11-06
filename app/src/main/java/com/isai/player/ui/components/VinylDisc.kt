@@ -18,9 +18,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import com.isai.player.R
 import com.isai.player.data.repository.ThemeMode
 import com.isai.player.ui.theme.IsaiTheme
 import kotlin.math.abs
@@ -41,10 +45,12 @@ fun VinylDisc(
     val strokeWidthPx = with(density) { 0.6.dp.toPx() }
     val rimEdgeStrokePx = with(density) { 0.5.dp.toPx() }
     val spindleRingStrokePx = with(density) { 0.8.dp.toPx() }
+    val discContentDesc = stringResource(id = R.string.semantics_vinyl_disc_idle)
 
     Box(
         modifier = modifier
             .aspectRatio(1f)
+            .semantics { contentDescription = discContentDesc }
             // Layer 1: Static Ambient Glow / Shadow beneath the record (NOT rotating)
             .drawBehind {
                 val r = size.minDimension / 2f

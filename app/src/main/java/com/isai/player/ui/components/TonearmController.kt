@@ -29,13 +29,18 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import com.isai.player.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -176,24 +181,43 @@ fun TonearmInteractiveContainer(
     var lastProgressStep by remember { mutableIntStateOf(-1) }
     var wasOnRecord by remember { mutableStateOf(false) }
 
+    val liftActionLabel = stringResource(id = R.string.semantics_action_lift)
+    val dropActionLabel = stringResource(id = R.string.semantics_action_drop)
+    val fwdActionLabel = stringResource(id = R.string.semantics_action_forward_10s)
+    val rwdActionLabel = stringResource(id = R.string.semantics_action_rewind_10s)
+    val playingLabel = stringResource(id = R.string.semantics_playing)
+    val pausedLabel = stringResource(id = R.string.semantics_paused)
+    val currentProg = progress()
+    val tonearmDesc = stringResource(id = R.string.semantics_tonearm_description, (currentProg * 100).toInt())
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .semantics {
+            .semantics(mergeDescendants = true) {
                 role = Role.Slider
-                val currentProg = progress()
-                progressBarRangeInfo = androidx.compose.ui.semantics.ProgressBarRangeInfo(
+                progressBarRangeInfo = ProgressBarRangeInfo(
                     current = currentProg,
                     range = 0f..1f
                 )
-                stateDescription = if (isPlaying) "Playing" else "Paused"
+                contentDescription = tonearmDesc
+                stateDescription = if (isPlaying) playingLabel else pausedLabel
                 customActions = listOf(
-                    androidx.compose.ui.semantics.CustomAccessibilityAction("Play") {
-                        onTapToggle()
+                    CustomAccessibilityAction(liftActionLabel) {
+                        onLiftedStop()
                         true
                     },
-                    androidx.compose.ui.semantics.CustomAccessibilityAction("Lift needle") {
-                        onLiftedStop()
+                    CustomAccessibilityAction(dropActionLabel) {
+                        onScrubEnd(true, 0f)
+                        true
+                    },
+                    CustomAccessibilityAction(fwdActionLabel) {
+                        val newProgress = (progress() + 0.05f).coerceIn(0f, 1f)
+                        onScrubEnd(true, newProgress)
+                        true
+                    },
+                    CustomAccessibilityAction(rwdActionLabel) {
+                        val newProgress = (progress() - 0.05f).coerceIn(0f, 1f)
+                        onScrubEnd(true, newProgress)
                         true
                     }
                 )

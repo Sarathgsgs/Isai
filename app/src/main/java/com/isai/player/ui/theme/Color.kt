@@ -17,8 +17,8 @@ val LightBackground = Color(0xFFF3F4FF) // Soft Lavender
 val LightSurface = Color(0xFFFFFFFF)
 val LightSurfaceVariant = Color(0xFFE8EAFB)
 val LightOnBackground = Color(0xFF0F1535) // Deep Navy
-val LightOnSurfaceVariant = Color(0xFF7C82A3)
-val LightAccentDefault = Color(0xFF5B7CFA) // Vivid Blue
+val LightOnSurfaceVariant = Color(0xFF525A7A) // WCAG AA compliant on White & Soft Lavender
+val LightAccentDefault = Color(0xFF3857DC) // Vivid Royal Blue (WCAG AA >= 4.5:1 on White)
 
 // --- Tonearm & Vinyl Hardware Palette ---
 val MetalLight = Color(0xFFF2F4F8)

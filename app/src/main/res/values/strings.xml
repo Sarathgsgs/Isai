@@ -223,4 +223,15 @@
     <string name="error_corrupt_track_skipped">Unable to play track; skipped to next</string>
     <string name="error_all_tracks_unplayable">Unable to play tracks in queue. Please check your audio files.</string>
     <string name="error_zero_duration_unsupported">Track duration unknown</string>
+
+    <!-- TalkBack & Accessibility Semantics -->
+    <string name="semantics_tonearm_description">Tonearm needle on vinyl record. Progress %1$d percent</string>
+    <string name="semantics_action_lift">Lift Needle</string>
+    <string name="semantics_action_drop">Drop Needle</string>
+    <string name="semantics_action_forward_10s">Seek forward 10 seconds</string>
+    <string name="semantics_action_rewind_10s">Seek backward 10 seconds</string>
+    <string name="semantics_playing">Playing</string>
+    <string name="semantics_paused">Paused</string>
+    <string name="semantics_vinyl_disc_description">Spinning vinyl record: %1$s by %2$s</string>
+    <string name="semantics_vinyl_disc_idle">Vinyl record</string>
 </resources>

@@ -5,6 +5,23 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0-tests-perf-accessibility] - 2026-11-06
+### Added
+- Phase 3 / Prompt M: Comprehensive TalkBack screen reader accessibility, custom accessibility actions, WCAG 2.1 AA contrast tuning, minimum 48dp touch bounds, and ART ahead-of-time baseline profiles.
+- TalkBack & Assistive Technology:
+  - `TonearmController`: Semantic slider node with dynamic content descriptions ("Tonearm needle on vinyl record. Progress X percent") and state descriptions ("Playing" vs "Paused").
+  - Custom Accessibility Actions: TalkBack users can perform "Lift Needle", "Drop Needle", "Seek forward 10 seconds", and "Seek backward 10 seconds" via assistive actions menu without physical gesture dragging.
+  - `VinylDisc`: Accessible semantic role and description ("Vinyl record").
+  - `ControlDial`: Enforced minimum 48x48 dp touch target bounding boxes on all playback control icon buttons.
+  - Accessibility strings localized in `strings.xml`.
+- Color Contrast & Visual Accessibility:
+  - Adjusted Light theme tokens (`LightAccentDefault` = `#3857DC`, `LightOnSurfaceVariant` = `#525A7A`) guaranteeing >= 4.5:1 contrast against light backgrounds and surfaces.
+- Performance & Ahead-of-Time (AOT) Compilation:
+  - `baseline-prof.txt`: ART profile rules optimizing cold startup (`MainActivity`, `IsaiApp`), Jetpack Compose drawing, tonearm geometry math loops, vinyl disc shaders, Media3 audio pipeline, and Room database DAOs.
+- Unit Tests:
+  - `AccessibilityContrastTest`: Pure JVM test mathematically validating WCAG 2.1 AA relative luminance contrast ratios for all core theme colors on light and dark surfaces.
+  - `TonearmSemanticsTest`: Validates TalkBack step-seeking, clamping math, state description, and action dispatching.
+
 ## [0.14.0-hardening-edge-cases] - 2026-11-06
 ### Added
 - Phase 3 / Prompt L: Comprehensive hardening against SAF storage permission revocation, corrupt audio auto-skipping, zero-duration divide-by-zero guards, and Android StrictMode diagnostics.
