@@ -58,3 +58,4 @@ abstract class RepositoryModule {
         impl: QueueRepositoryImpl
     ): QueueRepository
 }
+

@@ -12,3 +12,4 @@ data class Artist(
     val displayName: String
         get() = name.ifBlank { "Unknown Artist" }
 }
+

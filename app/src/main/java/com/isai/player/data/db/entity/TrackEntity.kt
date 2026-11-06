@@ -77,3 +77,4 @@ data class TrackEntity(
     @ColumnInfo(name = "has_lyrics", defaultValue = "0")
     val hasLyrics: Boolean = false
 )
+

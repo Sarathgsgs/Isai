@@ -23,3 +23,4 @@ data class PlaylistEntity(
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long
 )
+

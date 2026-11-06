@@ -10,3 +10,4 @@ interface QueueRepository {
     suspend fun saveQueue(trackIds: List<Long>)
     suspend fun clearQueue()
 }
+

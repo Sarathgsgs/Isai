@@ -95,3 +95,4 @@ fun PlaylistEntity.toDomain(trackCount: Int = 0): Playlist = Playlist(
     createdAt = createdAt,
     updatedAt = updatedAt
 )
+

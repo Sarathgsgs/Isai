@@ -33,18 +33,30 @@ class MainActivity : ComponentActivity() {
             val currentThemeMode by settingsRepository.themeMode.collectAsStateWithLifecycle(
                 initialValue = ThemeMode.SYSTEM
             )
+            val selectedFolderUri by settingsRepository.selectedFolderUri.collectAsStateWithLifecycle(
+                initialValue = "CHECKING"
+            )
             val scope = rememberCoroutineScope()
 
-            IsaiTheme(themeMode = currentThemeMode) {
-                MainScaffold(
-                    currentThemeMode = currentThemeMode,
-                    onThemeModeChange = { newMode ->
-                        scope.launch {
-                            settingsRepository.setThemeMode(newMode)
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+            if (selectedFolderUri != "CHECKING") {
+                val startRoute = if (selectedFolderUri.isNullOrBlank()) {
+                    com.isai.player.ui.navigation.NavRoute.Onboarding
+                } else {
+                    com.isai.player.ui.navigation.NavRoute.Home
+                }
+
+                IsaiTheme(themeMode = currentThemeMode) {
+                    MainScaffold(
+                        currentThemeMode = currentThemeMode,
+                        onThemeModeChange = { newMode ->
+                            scope.launch {
+                                settingsRepository.setThemeMode(newMode)
+                            }
+                        },
+                        startDestination = startRoute,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
     }

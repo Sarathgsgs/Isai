@@ -275,3 +275,4 @@ class IsaiDatabaseTest {
         assertTrue(queueDao.getQueueTracks().isEmpty())
     }
 }
+

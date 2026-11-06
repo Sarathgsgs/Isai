@@ -13,3 +13,4 @@ interface FavoritesRepository {
     suspend fun removeFavorite(trackId: Long)
     fun observeFavoriteCount(): Flow<Int>
 }
+

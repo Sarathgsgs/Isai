@@ -30,3 +30,4 @@ interface SettingsRepository {
     suspend fun setSleepTimer(endEpochMs: Long, stopAtEndOfTrack: Boolean)
     suspend fun clearSleepTimer()
 }
+

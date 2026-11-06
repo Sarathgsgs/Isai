@@ -45,4 +45,13 @@
     <string name="loading_state_default_message">Loading music…</string>
     <string name="error_state_default_title">Something went wrong</string>
     <string name="error_state_default_message">Unable to load content. Please try again.</string>
+
+    <!-- Onboarding & Scanner -->
+    <string name="onboarding_title">Welcome to Isai</string>
+    <string name="onboarding_description">An offline music player featuring an interactive vinyl record and tonearm. Choose a folder on your device to build your offline music library.</string>
+    <string name="onboarding_action_choose_folder">Choose Music Folder</string>
+    <string name="scanner_scanning_title">Building Your Library</string>
+    <string name="scanner_status_discovered">Discovered %1$d files…</string>
+    <string name="scanner_status_completed">Found %1$d tracks</string>
+    <string name="scanner_status_error">Scanning failed</string>
 </resources>

@@ -47,3 +47,4 @@ class FavoritesRepositoryImpl @Inject constructor(
         return favoriteDao.observeFavoriteCount()
     }
 }
+

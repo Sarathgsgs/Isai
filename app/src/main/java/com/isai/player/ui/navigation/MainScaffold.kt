@@ -48,6 +48,7 @@ import com.isai.player.ui.theme.IsaiTheme
 fun MainScaffold(
     currentThemeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
+    startDestination: NavRoute = NavRoute.Home,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -116,7 +117,7 @@ fun MainScaffold(
             // Main Navigation Host
             NavHost(
                 navController = navController,
-                startDestination = NavRoute.Home,
+                startDestination = startDestination,
                 modifier = Modifier.fillMaxSize()
             ) {
                 composable<NavRoute.Home> {
@@ -178,8 +179,10 @@ fun MainScaffold(
 
                 composable<NavRoute.Onboarding> {
                     OnboardingScreen(
-                        onChooseFolderClick = {
-                            navController.navigate(NavRoute.Home)
+                        onScanCompleted = {
+                            navController.navigate(NavRoute.Home) {
+                                popUpTo<NavRoute.Onboarding> { inclusive = true }
+                            }
                         }
                     )
                 }

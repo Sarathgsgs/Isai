@@ -5,6 +5,18 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0-onboarding-scanner] - 2026-11-06
+### Added
+- Phase 3 / Prompt F: Storage Access Framework folder selection, high-speed recursive scanner, and onboarding.
+- `FolderScanner`: Direct `DocumentsContract.buildChildDocumentsUriUsingTree` child cursor querying eliminating slow `DocumentFile` Binder roundtrips, with queue-based recursion and audio format filtering.
+- `ArtCache`: RAM-safe embedded album art decoder with `inSampleSize` downsampling to maximum $512 \times 512\text{ px}$ JPEG and atomic file caching.
+- `MetadataExtractor`: Bounded `MediaMetadataRetriever` parser with compound track/disc number splitting (`"03/12"` $\to 3$), release year extraction, and filename sanitization fallback for untitled tracks.
+- `LibraryScanner`: High-throughput incremental diff engine comparing `lastModified` timestamps to skip unmodified tracks, soft-flagging missing tracks (`isMissing = true`), and updating Room via batched insertions.
+- `OnboardingScreen`: Interactive folder picker with SAF permission persistence, real-time scanning progress bar, track counter, completion summary, and automatic transition to Home.
+- `OnboardingViewModel`: Connects SAF folder selection to `LibraryScanner` and `SettingsRepository`.
+- Start destination routing in `MainScaffold`: automatically routes first-time users to `Onboarding` and returning users to `Home`.
+- Unit tests in `FolderScannerTest` and `MetadataExtractorTest`.
+
 ## [0.7.0-data-layer] - 2026-11-06
 ### Added
 - Phase 3 / Prompt E: Room database architecture, DAOs, repositories, and typed DataStore settings.

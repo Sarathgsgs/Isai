@@ -1,5 +1,6 @@
 package com.isai.player.data.db.dao
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -9,6 +10,12 @@ import androidx.room.Update
 import com.isai.player.data.db.entity.TrackEntity
 import com.isai.player.data.model.TrackSortOrder
 import kotlinx.coroutines.flow.Flow
+
+data class TrackUriAndModified(
+    val uri: String,
+    @ColumnInfo(name = "last_modified")
+    val lastModified: Long
+)
 
 @Dao
 interface TrackDao {
@@ -36,6 +43,9 @@ interface TrackDao {
 
     @Query("SELECT uri FROM tracks")
     suspend fun getAllTrackUris(): List<String>
+
+    @Query("SELECT uri, last_modified FROM tracks")
+    suspend fun getAllTrackUriAndLastModified(): List<TrackUriAndModified>
 
     @Query("SELECT COUNT(*) FROM tracks WHERE is_missing = 0")
     fun observeTrackCount(): Flow<Int>
@@ -100,3 +110,4 @@ interface TrackDao {
     @Query("DELETE FROM tracks WHERE is_missing = 1")
     suspend fun purgeMissingTracks(): Int
 }
+

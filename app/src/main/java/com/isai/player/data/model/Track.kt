@@ -35,3 +35,4 @@ data class Track(
     val displayTitle: String
         get() = title.ifBlank { "Unknown Title" }
 }
+

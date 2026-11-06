@@ -14,3 +14,4 @@ data class ArtistProjection(
     @ColumnInfo(name = "sample_art_path")
     val sampleArtPath: String?
 )
+

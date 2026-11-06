@@ -22,3 +22,4 @@ enum class ArtistSortOrder {
     NAME_ASC,
     TRACK_COUNT_DESC
 }
+

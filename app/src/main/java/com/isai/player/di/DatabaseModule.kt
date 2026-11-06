@@ -58,3 +58,4 @@ object DatabaseModule {
     @Provides
     fun provideQueueDao(database: IsaiDatabase): QueueDao = database.queueDao()
 }
+

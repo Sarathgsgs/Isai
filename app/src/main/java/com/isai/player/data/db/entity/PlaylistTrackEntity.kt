@@ -40,3 +40,4 @@ data class PlaylistTrackEntity(
     @ColumnInfo(name = "added_at")
     val addedAt: Long
 )
+

@@ -14,3 +14,4 @@ data class QueueSnapshot(
     val tracks: List<Track>,
     val currentIndex: Int = 0
 )
+

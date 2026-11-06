@@ -24,3 +24,4 @@ data class FavoriteEntity(
     @ColumnInfo(name = "added_at")
     val addedAt: Long
 )
+

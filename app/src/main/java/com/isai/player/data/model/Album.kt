@@ -16,3 +16,4 @@ data class Album(
     val displayArtist: String
         get() = artist.ifBlank { "Unknown Artist" }
 }
+

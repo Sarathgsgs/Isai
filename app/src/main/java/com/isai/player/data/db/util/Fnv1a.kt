@@ -24,3 +24,4 @@ object Fnv1a {
         return hash
     }
 }
+

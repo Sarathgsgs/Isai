@@ -15,3 +15,4 @@ interface PlaylistRepository {
     suspend fun removeTrackFromPlaylist(playlistId: Long, trackId: Long)
     suspend fun reorderPlaylist(playlistId: Long, orderedTrackIds: List<Long>)
 }
+

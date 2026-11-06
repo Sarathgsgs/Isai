@@ -49,3 +49,4 @@ interface FavoriteDao {
         }
     }
 }
+

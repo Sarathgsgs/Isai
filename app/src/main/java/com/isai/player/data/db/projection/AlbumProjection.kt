@@ -17,3 +17,4 @@ data class AlbumProjection(
     @ColumnInfo(name = "art_path")
     val artPath: String?
 )
+

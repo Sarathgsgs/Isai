@@ -107,3 +107,4 @@ class SettingsRepositoryTest {
         assertFalse(repository.sleepTimerStopAtEnd.first())
     }
 }
+

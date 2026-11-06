@@ -127,3 +127,4 @@ class TrackEntityMappingTest {
         assertEquals(8, artistProj.albumCount)
     }
 }
+

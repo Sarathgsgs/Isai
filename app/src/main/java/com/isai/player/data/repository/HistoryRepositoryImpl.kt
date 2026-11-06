@@ -30,3 +30,4 @@ class HistoryRepositoryImpl @Inject constructor(
         return historyDao.observeHistoryCount()
     }
 }
+

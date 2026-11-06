@@ -27,3 +27,4 @@ data class QueueItemEntity(
     @ColumnInfo(name = "track_id")
     val trackId: Long
 )
+

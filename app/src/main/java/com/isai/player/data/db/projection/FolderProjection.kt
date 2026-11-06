@@ -9,3 +9,4 @@ data class FolderProjection(
     @ColumnInfo(name = "track_count")
     val trackCount: Int
 )
+

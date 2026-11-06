@@ -31,3 +31,4 @@ interface FolderDao {
     )
     fun observeTracksInFolder(folderPath: String): Flow<List<TrackEntity>>
 }
+

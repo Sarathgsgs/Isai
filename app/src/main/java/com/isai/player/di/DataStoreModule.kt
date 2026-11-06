@@ -23,3 +23,4 @@ object DataStoreModule {
         @ApplicationContext context: Context
     ): DataStore<Preferences> = context.dataStore
 }
+

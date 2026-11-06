@@ -31,3 +31,4 @@ data class PlayHistoryEntity(
     @ColumnInfo(name = "played_at")
     val playedAt: Long
 )
+

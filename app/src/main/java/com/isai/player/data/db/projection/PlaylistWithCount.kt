@@ -11,3 +11,4 @@ data class PlaylistWithCount(
     @ColumnInfo(name = "track_count")
     val trackCount: Int
 )
+

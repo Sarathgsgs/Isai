@@ -42,3 +42,4 @@ interface HistoryDao {
         insertHistoryEntry(PlayHistoryEntity(trackId = trackId, playedAt = playedAt))
     }
 }
+

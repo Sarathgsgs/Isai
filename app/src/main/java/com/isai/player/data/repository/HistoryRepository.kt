@@ -9,3 +9,4 @@ interface HistoryRepository {
     suspend fun clearHistory()
     fun observeHistoryCount(): Flow<Int>
 }
+

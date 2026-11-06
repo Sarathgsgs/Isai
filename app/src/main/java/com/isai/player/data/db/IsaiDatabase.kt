@@ -44,3 +44,4 @@ abstract class IsaiDatabase : RoomDatabase() {
         const val DATABASE_NAME = "isai_player.db"
     }
 }
+

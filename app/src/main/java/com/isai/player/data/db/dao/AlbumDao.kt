@@ -99,3 +99,4 @@ interface AlbumDao {
     )
     fun observeTracksForAlbum(album: String): Flow<List<TrackEntity>>
 }
+

@@ -51,3 +51,4 @@ class Fnv1aTest {
         assertEquals(hash, Fnv1a.hash64(longUri))
     }
 }
+

@@ -54,3 +54,4 @@ interface ArtistDao {
     )
     fun observeTracksForArtist(artist: String): Flow<List<TrackEntity>>
 }
+
