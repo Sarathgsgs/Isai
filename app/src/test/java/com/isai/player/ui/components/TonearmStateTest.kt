@@ -120,3 +120,4 @@ class TonearmStateTest {
         assertFalse("Playback should not start when hasTrack is false", player.isPlaying.value)
     }
 }
+
