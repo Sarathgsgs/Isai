@@ -264,4 +264,8 @@
     <string name="lyrics_empty_title">No lyrics found</string>
     <string name="lyrics_empty_desc">Import a synced .lrc or plain .txt file to view lyrics offline</string>
     <string name="lyrics_action_import">Import Lyrics</string>
+
+    <!-- AppWidget -->
+    <string name="widget_name">Isai Turntable</string>
+    <string name="widget_description">Interactive vinyl record and tonearm playback controls for your home screen</string>
 </resources>

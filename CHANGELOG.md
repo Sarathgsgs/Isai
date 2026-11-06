@@ -5,6 +5,35 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0-glance-widget] - 2026-11-06
+### Added
+- Add-on Round 1 / Prompt Q: Jetpack Glance Home-screen Widget with responsive size layouts, pre-rendered turntable bitmap, interactive action callbacks, and throttled updater.
+- Responsive Jetpack Glance Widget (`IsaiGlanceWidget`):
+  - Small layout (2x2): Compact turntable visual with circular Play/Pause overlay.
+  - Medium layout (4x1 / 4x2): Turntable art, track title, artist name, Play/Pause, and Next track controls.
+  - Large layout (4x3+): Full turntable record, track metadata, Previous/Play-Pause/Next controls, favorite toggle, and active track progress bar.
+- Photorealistic Turntable Pre-Renderer (`WidgetArtRenderer`):
+  - Pre-renders 300x300 high-resolution turntable art (vinyl disc, concentric grooves, circular album cover label, and pivot-mounted tonearm) off-thread.
+  - Synchronizes tonearm posture: Lowered to record groove when playing (`100°`), parked on rest post when paused (`64°`).
+  - High-performance in-memory LRU bitmap cache keyed by `"${trackId}_${isPlaying}"` with zero IPC lag.
+- Interactive Widget Action Callbacks (`WidgetActions`):
+  - `TogglePlayPauseAction`: Direct play/pause toggling through `PlayerController`.
+  - `SkipNextAction`: Advances playback to the next queue item.
+  - `SkipPreviousAction`: Returns to previous track or seeks to beginning.
+  - `ToggleFavoriteAction`: Toggles favorite state via `FavoritesRepository`.
+  - Hilt `@EntryPoint` injection (`WidgetActionEntryPoint`) cleanly bridges remote Glance callback contexts to singleton repositories.
+- Throttled Progress & State Observer (`WidgetUpdater`):
+  - Automatically started in `IsaiApp.onCreate()`.
+  - Immediate widget updates on track changes or play/pause toggles.
+  - Throttled progress bar updates (max 1 IPC broadcast per 10 seconds) to prevent battery drain and launcher process IPC saturation.
+- XML Metadata & Receiver Registration:
+  - AppWidget provider XML (`isai_widget_info.xml`) with preview layout and key metadata.
+  - Loading preview XML layout (`widget_loading_layout.xml`).
+  - `IsaiGlanceWidgetReceiver` declared in `AndroidManifest.xml` with standard `APPWIDGET_UPDATE` intent filters.
+- Unit Tests:
+  - `WidgetArtRendererTest`: Verifies cache key formatting and track/play state uniqueness.
+  - `WidgetUpdaterTest`: Verifies immediate updates on state changes and 10s throttling behavior for steady-state playback.
+
 ## [0.17.0-offline-lyrics] - 2026-11-06
 ### Added
 - Add-on Round 1 / Prompt P: Complete offline lyrics support (discovery, pure Kotlin ID3v2/Vorbis tag extraction, LRC parser, auto-scrolling LyricsView, offset calibration, Room v3 migration).
