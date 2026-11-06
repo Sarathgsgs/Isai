@@ -191,6 +191,7 @@ fun MainScaffold(
                             when (labRoute) {
                                 is LabsRoute.TonearmLab -> navController.navigate(NavRoute.TonearmLab)
                                 is LabsRoute.VinylDiscLab -> navController.navigate(NavRoute.VinylDiscLab)
+                                is LabsRoute.VinylStageLab -> navController.navigate(NavRoute.VinylStageLab)
                                 else -> {}
                             }
                         }
@@ -205,6 +206,12 @@ fun MainScaffold(
 
                 composable<NavRoute.VinylDiscLab> {
                     com.isai.player.ui.components.VinylDiscLabScreen(
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+
+                composable<NavRoute.VinylStageLab> {
+                    com.isai.player.ui.components.VinylStageLabScreen(
                         onBackClick = { navController.popBackStack() }
                     )
                 }

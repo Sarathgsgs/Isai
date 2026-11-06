@@ -5,6 +5,20 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0-vinyl-stage] - 2026-11-06
+### Added
+- Phase 2 / Prompt D: VinylStage unified assembly, gesture arbitration, and `VinylStageLabScreen`.
+- `StageTrack` data model and `SwipeDirection` enum for horizontal disc navigation.
+- `StageBackground` composable rendering ambient blurred/darkened album art (Dark theme) or subtle accent gradient (Light theme).
+- `VinylStage` composable harmonizing vinyl disc rotation physics, tonearm tracking, and needle drop bounce:
+  - Synchronized playback rules: disc spins only when playing and not scrubbing (`isPlaying && !isScrubbing`).
+  - Play triggers immediate spin-up with ~700ms tonearm lower animation; pause parks tonearm first followed by disc spin-down ~150ms later.
+  - Tonearm lifts during track changes and smoothly lowers if playback continues.
+  - Multi-touch gesture arbitration ensuring tonearm hit target takes strict priority over horizontal track swiping.
+  - Horizontal swipe on vinyl disc to skip tracks with directional slide transition (left/right) and velocity threshold ($> 800\text{ px/s}$).
+- `VinylStageLabScreen` interactive testbed featuring 5 sample tracks, external notification pause simulation, seekbar scrub sync, lift behavior toggle (`PAUSE` vs `STOP`), theme toggle, live event logger, and real-time FPS counter.
+- Unit tests in `VinylStageTest` verifying synchronization rules, 3-second track restart threshold, track index wrap-around, and fallback seed generation.
+
 ## [0.5.0-vinyl-disc] - 2026-11-06
 ### Added
 - Phase 2 / Prompt C: `VinylDisc` component, 33⅓ RPM rotation physics, and `VinylDiscLabScreen`.
