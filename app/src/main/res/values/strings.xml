@@ -188,6 +188,12 @@
     <string name="settings_theme_light">Light</string>
     <string name="settings_dynamic_accent">Dynamic Accent Color</string>
     <string name="settings_dynamic_accent_desc">Extract accent colors from album artwork</string>
+    <string name="settings_seekbar_style">Seekbar Style</string>
+    <string name="settings_seekbar_style_desc">Choose between bar waveform, smooth line silhouette, or classic line</string>
+    <string name="settings_seekbar_auto">System Default (Theme Auto)</string>
+    <string name="settings_seekbar_bars">Waveform Bars</string>
+    <string name="settings_seekbar_line">Waveform Line</string>
+    <string name="settings_seekbar_classic">Classic Line</string>
 
     <string name="settings_section_vinyl">Vinyl &amp; Playback</string>
     <string name="settings_needle_lift_behavior">Needle-Lift Behavior</string>
@@ -209,6 +215,11 @@
     <string name="settings_status_scanning">Scanning library…</string>
     <string name="settings_status_scan_complete">Scan complete: %1$d tracks updated</string>
     <string name="settings_status_purged">Cleaned %1$d missing tracks</string>
+    <string name="settings_waveform_cache">Waveform Cache</string>
+    <string name="settings_waveform_cache_desc">%1$d songs cached on device</string>
+    <string name="settings_action_clear_waveform_cache">Clear Waveform Cache</string>
+    <string name="settings_pregenerate_waveforms">Pre-generate Waveforms While Charging</string>
+    <string name="settings_pregenerate_waveforms_desc">Compute waveforms in background when device is plugged in and idle</string>
 
     <string name="settings_section_about">About &amp; Privacy</string>
     <string name="settings_app_version">Version %1$s (Offline Build)</string>

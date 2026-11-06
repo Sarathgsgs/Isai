@@ -3,7 +3,10 @@ package com.isai.player.ui.nowplaying
 import com.isai.player.data.model.Track
 import com.isai.player.data.repository.FavoritesRepository
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.SettingsRepository
+import com.isai.player.data.repository.WaveformRepository
+import com.isai.player.data.repository.WaveformState
 import com.isai.player.playback.PlayerController
 import com.isai.player.playback.PlayerState
 import com.isai.player.ui.components.SwipeDirection
@@ -32,9 +35,11 @@ class NowPlayingViewModelTest {
     private lateinit var playerController: PlayerController
     private lateinit var favoritesRepository: FavoritesRepository
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var waveformRepository: WaveformRepository
 
     private val playerStateFlow = MutableStateFlow(PlayerState())
     private val liftBehaviorFlow = MutableStateFlow(LiftBehavior.PAUSE)
+    private val seekBarStyleFlow = MutableStateFlow(SeekBarStyle.AUTO)
 
     private fun createSampleTrack(id: Long = 1L): Track = Track(
         id = id,
@@ -62,10 +67,13 @@ class NowPlayingViewModelTest {
         playerController = mockk(relaxed = true)
         favoritesRepository = mockk(relaxed = true)
         settingsRepository = mockk(relaxed = true)
+        waveformRepository = mockk(relaxed = true)
 
         every { playerController.playerState } returns playerStateFlow
         every { settingsRepository.liftBehavior } returns liftBehaviorFlow
+        every { settingsRepository.seekBarStyle } returns seekBarStyleFlow
         every { favoritesRepository.observeIsFavorite(any()) } returns flowOf(false)
+        every { waveformRepository.observeWaveform(any(), any(), any(), any()) } returns flowOf(WaveformState.Unavailable)
     }
 
     @After
@@ -75,14 +83,14 @@ class NowPlayingViewModelTest {
 
     @Test
     fun scrubPreviewLifecycle() = runTest {
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository)
+        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
 
         assertNull(viewModel.scrubPreviewProgress.value)
 
-        viewModel.onScrubPreview(0.45f)
-        assertEquals(0.45f, viewModel.scrubPreviewProgress.value)
+        viewModel.onScrubPreview(ScrubOwner.BAR, 0.45f)
+        assertEquals(0.45f, viewModel.scrubPreviewProgress.value ?: 0f, 0.001f)
 
-        viewModel.onScrubEnd(commit = true, progress = 0.45f)
+        viewModel.onScrubEnd(ScrubOwner.BAR, commit = true, progress = 0.45f)
         assertNull(viewModel.scrubPreviewProgress.value)
         verify { playerController.seekToProgress(0.45f) }
         verify { playerController.play() }
@@ -90,7 +98,7 @@ class NowPlayingViewModelTest {
 
     @Test
     fun liftStopHonorsSetting() = runTest {
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository)
+        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
 
         // When LiftBehavior is PAUSE
         liftBehaviorFlow.value = LiftBehavior.PAUSE
@@ -106,7 +114,7 @@ class NowPlayingViewModelTest {
 
     @Test
     fun skipUpdatesLastSwipeDirection() = runTest {
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository)
+        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
 
         viewModel.skipToNext()
         assertEquals(SwipeDirection.NEXT, viewModel.lastSwipeDirection.value)
@@ -122,7 +130,7 @@ class NowPlayingViewModelTest {
         val track = createSampleTrack(id = 42L)
         playerStateFlow.value = PlayerState(currentTrack = track)
 
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository)
+        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
         testDispatcher.scheduler.advanceUntilIdle()
 
         viewModel.toggleFavorite()
@@ -133,7 +141,7 @@ class NowPlayingViewModelTest {
 
     @Test
     fun sleepTimerDelegatesToPlayerController() = runTest {
-        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository)
+        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository, waveformRepository)
 
         viewModel.startSleepTimer(30 * 60 * 1000L, stopAtEndOfTrack = false)
         verify { playerController.startSleepTimer(30 * 60 * 1000L, false) }
@@ -142,4 +150,3 @@ class NowPlayingViewModelTest {
         verify { playerController.cancelSleepTimer() }
     }
 }
-

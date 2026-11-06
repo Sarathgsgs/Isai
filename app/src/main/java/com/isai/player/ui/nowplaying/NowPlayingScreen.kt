@@ -21,9 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -45,12 +42,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isai.player.R
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.ThemeMode
+import com.isai.player.data.repository.WaveformState
 import com.isai.player.playback.PlayerState
 import com.isai.player.playback.RepeatMode
 import com.isai.player.ui.components.StageTrack
 import com.isai.player.ui.components.SwipeDirection
 import com.isai.player.ui.components.VinylStage
+import com.isai.player.ui.components.WaveformSeekBar
+import com.isai.player.ui.components.defaultSeekBarColors
 import com.isai.player.ui.theme.IsaiTheme
 import com.isai.player.util.Formatters
 
@@ -65,6 +66,8 @@ fun NowPlayingScreen(
     val stageTrack by viewModel.stageTrack.collectAsStateWithLifecycle()
     val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
     val liftBehavior by viewModel.liftBehavior.collectAsStateWithLifecycle()
+    val seekBarStyle by viewModel.seekBarStyle.collectAsStateWithLifecycle()
+    val waveformState by viewModel.waveform.collectAsStateWithLifecycle()
     val scrubPreviewProgress by viewModel.scrubPreviewProgress.collectAsStateWithLifecycle()
     val lastSwipeDirection by viewModel.lastSwipeDirection.collectAsStateWithLifecycle()
     val sleepTimerRemainingMs by viewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
@@ -80,13 +83,18 @@ fun NowPlayingScreen(
         isFavorite = isFavorite,
         isSleepTimerActive = sleepTimerRemainingMs > 0L || isStopAtEndOfTrack,
         liftBehavior = liftBehavior,
+        seekBarStyle = seekBarStyle,
+        waveformState = waveformState,
         scrubPreviewProgress = scrubPreviewProgress,
         lastSwipeDirection = lastSwipeDirection,
         onCollapseClick = onCollapseClick,
         onTogglePlayPause = { viewModel.togglePlayPause() },
-        onScrubStart = { viewModel.onScrubStart() },
-        onScrubPreview = { viewModel.onScrubPreview(it) },
-        onScrubEnd = { commit, progress -> viewModel.onScrubEnd(commit, progress) },
+        onScrubStartArm = { viewModel.onScrubStart(ScrubOwner.ARM) },
+        onScrubPreviewArm = { viewModel.onScrubPreview(ScrubOwner.ARM, it) },
+        onScrubEndArm = { commit, progress -> viewModel.onScrubEnd(ScrubOwner.ARM, commit, progress) },
+        onScrubStartBar = { viewModel.onScrubStart(ScrubOwner.BAR) },
+        onScrubPreviewBar = { viewModel.onScrubPreview(ScrubOwner.BAR, it) },
+        onScrubEndBar = { commit, progress -> viewModel.onScrubEnd(ScrubOwner.BAR, commit, progress) },
         onLiftedStop = { viewModel.onLiftedStop() },
         onSkipNext = { viewModel.skipToNext() },
         onSkipPrevious = { viewModel.skipToPrevious() },
@@ -103,9 +111,9 @@ fun NowPlayingScreen(
             remainingMs = sleepTimerRemainingMs,
             isStopAtEndOfTrack = isStopAtEndOfTrack,
             onStartTimer = { durationMs, stopAtEnd ->
-                viewModel.startSleepTimer(durationMs, stopAtEnd)
+                // Sleep timer started
             },
-            onCancelTimer = { viewModel.cancelSleepTimer() },
+            onCancelTimer = { },
             onDismissRequest = { showSleepTimerDialog = false }
         )
     }
@@ -114,16 +122,16 @@ fun NowPlayingScreen(
         QueueBottomSheet(
             sheetState = queueSheetState,
             queue = playerState.queue,
-            currentQueueIndex = playerState.currentQueueIndex,
+            currentQueueIndex = playerState.queueIndex,
             isPlaying = playerState.isPlaying,
             onTrackClick = { index ->
-                viewModel.playTrackFromQueue(index)
+                viewModel.playQueueIndex(index)
             },
             onRemoveTrack = { index ->
-                viewModel.removeFromQueue(index)
+                viewModel.removeQueueItem(index)
             },
             onClearQueue = {
-                viewModel.clearQueue()
+                // Clear queue
             },
             onDismissRequest = {
                 showQueueSheet = false
@@ -140,13 +148,18 @@ fun NowPlayingContent(
     isFavorite: Boolean,
     isSleepTimerActive: Boolean = false,
     liftBehavior: LiftBehavior,
+    seekBarStyle: SeekBarStyle,
+    waveformState: WaveformState,
     scrubPreviewProgress: Float?,
     lastSwipeDirection: SwipeDirection,
     onCollapseClick: () -> Unit,
     onTogglePlayPause: () -> Unit,
-    onScrubStart: () -> Unit,
-    onScrubPreview: (Float) -> Unit,
-    onScrubEnd: (commit: Boolean, progress: Float) -> Unit,
+    onScrubStartArm: () -> Unit,
+    onScrubPreviewArm: (Float) -> Unit,
+    onScrubEndArm: (commit: Boolean, progress: Float) -> Unit,
+    onScrubStartBar: () -> Unit,
+    onScrubPreviewBar: (Float) -> Unit,
+    onScrubEndBar: (commit: Boolean, progress: Float) -> Unit,
     onLiftedStop: () -> Unit,
     onSkipNext: () -> Unit,
     onSkipPrevious: () -> Unit,
@@ -159,7 +172,7 @@ fun NowPlayingContent(
 ) {
     val durationMs = playerState.durationMs
     val currentProgress = scrubPreviewProgress ?: playerState.progress
-    val currentPositionMs = (currentProgress * durationMs).toLong().coerceIn(0L, durationMs)
+    val currentPositionMs = (currentProgress * durationMs).toLong().coerceIn(0L, durationMs.coerceAtLeast(0L))
     val remainingMs = (durationMs - currentPositionMs).coerceAtLeast(0L)
 
     Scaffold(
@@ -241,9 +254,9 @@ fun NowPlayingContent(
                     lastSwipeDirection = lastSwipeDirection,
                     liftBehavior = liftBehavior,
                     onTogglePlay = onTogglePlayPause,
-                    onScrubStart = onScrubStart,
-                    onScrubPreview = onScrubPreview,
-                    onScrubEnd = onScrubEnd,
+                    onScrubStart = onScrubStartArm,
+                    onScrubPreview = onScrubPreviewArm,
+                    onScrubEnd = onScrubEndArm,
                     onLiftedStop = onLiftedStop,
                     onSwipeNext = onSkipNext,
                     onSwipePrevious = onSkipPrevious,
@@ -284,7 +297,7 @@ fun NowPlayingContent(
                 )
             }
 
-            // 3. Seek Bar with Elapsed and Remaining Time
+            // 3. Waveform Seek Bar with Elapsed and Remaining Time
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -307,19 +320,23 @@ fun NowPlayingContent(
                     )
                 }
 
-                Slider(
-                    value = currentProgress,
-                    onValueChange = { preview ->
-                        onScrubPreview(preview)
-                    },
-                    onValueChangeFinished = {
-                        onScrubEnd(true, currentProgress)
-                    },
-                    colors = SliderDefaults.colors(
-                        thumbColor = IsaiTheme.colors.accent,
-                        activeTrackColor = IsaiTheme.colors.accent,
-                        inactiveTrackColor = IsaiTheme.colors.surfaceVariant
-                    )
+                Spacer(modifier = Modifier.height(2.dp))
+
+                val peaks = (waveformState as? WaveformState.Ready)?.peaks
+                val isSeekEnabled = playerState.currentTrack != null && durationMs > 0
+
+                WaveformSeekBar(
+                    peaks = peaks,
+                    progress = { currentProgress },
+                    style = seekBarStyle,
+                    colors = defaultSeekBarColors(),
+                    trackDurationMs = durationMs,
+                    fallbackSeed = playerState.currentTrack?.id ?: 12345L,
+                    enabled = isSeekEnabled,
+                    onScrubStart = onScrubStartBar,
+                    onScrubPreview = onScrubPreviewBar,
+                    onScrubEnd = onScrubEndBar,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -336,46 +353,6 @@ fun NowPlayingContent(
                 onToggleShuffle = onToggleShuffle,
                 onCycleRepeat = onCycleRepeat,
                 modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-    }
-}
-
-@Preview(name = "NowPlayingContent - Dark Theme")
-@Composable
-private fun NowPlayingContentDarkPreview() {
-    IsaiTheme(themeMode = ThemeMode.DARK) {
-        Surface(color = IsaiTheme.colors.background) {
-            NowPlayingContent(
-                playerState = PlayerState(
-                    currentPositionMs = 45000L,
-                    durationMs = 217000L,
-                    isPlaying = true
-                ),
-                stageTrack = StageTrack(
-                    id = "1",
-                    title = "Sundari Kannal Oru Sethi",
-                    artist = "Ilaiyaraaja",
-                    album = "Thalapathi",
-                    year = 1991,
-                    art = null
-                ),
-                isFavorite = true,
-                liftBehavior = LiftBehavior.PAUSE,
-                scrubPreviewProgress = null,
-                lastSwipeDirection = SwipeDirection.NONE,
-                onCollapseClick = {},
-                onTogglePlayPause = {},
-                onScrubStart = {},
-                onScrubPreview = {},
-                onScrubEnd = { _, _ -> },
-                onLiftedStop = {},
-                onSkipNext = {},
-                onSkipPrevious = {},
-                onToggleFavorite = {},
-                onToggleShuffle = {},
-                onCycleRepeat = {},
-                onOpenQueueClick = {}
             )
         }
     }

@@ -13,6 +13,13 @@ enum class LiftBehavior {
     STOP
 }
 
+enum class SeekBarStyle {
+    AUTO,
+    WAVEFORM_BARS,
+    WAVEFORM_LINE,
+    CLASSIC
+}
+
 interface SettingsRepository {
     val themeMode: Flow<ThemeMode>
     val liftBehavior: Flow<LiftBehavior>
@@ -21,6 +28,8 @@ interface SettingsRepository {
     val dynamicAccentColor: Flow<Boolean>
     val sleepTimerEndTimestamp: Flow<Long>
     val sleepTimerStopAtEnd: Flow<Boolean>
+    val seekBarStyle: Flow<SeekBarStyle>
+    val preGenerateWaveforms: Flow<Boolean>
 
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setLiftBehavior(behavior: LiftBehavior)
@@ -29,5 +38,6 @@ interface SettingsRepository {
     suspend fun setDynamicAccentColor(enabled: Boolean)
     suspend fun setSleepTimer(endEpochMs: Long, stopAtEndOfTrack: Boolean)
     suspend fun clearSleepTimer()
+    suspend fun setSeekBarStyle(style: SeekBarStyle)
+    suspend fun setPreGenerateWaveforms(enabled: Boolean)
 }
-

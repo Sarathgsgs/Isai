@@ -65,9 +65,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isai.player.R
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.ThemeMode
 import com.isai.player.ui.components.IsaiChip
 import com.isai.player.ui.components.SectionHeader
+import com.isai.player.ui.components.WaveformSeekBar
+import com.isai.player.ui.components.defaultSeekBarColors
 import com.isai.player.ui.nowplaying.SleepTimerDialog
 import com.isai.player.ui.theme.CardShape
 import com.isai.player.ui.theme.IsaiTheme
@@ -204,6 +207,67 @@ fun SettingsScreen(
                                 uncheckedThumbColor = IsaiTheme.colors.onSurfaceVariant,
                                 uncheckedTrackColor = IsaiTheme.colors.surfaceVariant
                             )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Seekbar Style Selector
+                    Text(
+                        text = stringResource(id = R.string.settings_seekbar_style),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = IsaiTheme.colors.onBackground
+                    )
+                    Text(
+                        text = stringResource(id = R.string.settings_seekbar_style_desc),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IsaiTheme.colors.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        SeekBarStyle.entries.forEach { style ->
+                            val label = when (style) {
+                                SeekBarStyle.AUTO -> stringResource(id = R.string.settings_seekbar_auto)
+                                SeekBarStyle.WAVEFORM_BARS -> stringResource(id = R.string.settings_seekbar_bars)
+                                SeekBarStyle.WAVEFORM_LINE -> stringResource(id = R.string.settings_seekbar_line)
+                                SeekBarStyle.CLASSIC -> stringResource(id = R.string.settings_seekbar_classic)
+                            }
+                            IsaiChip(
+                                selected = state.seekBarStyle == style,
+                                onClick = { viewModel.setSeekBarStyle(style) },
+                                label = label
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Live Seekbar Preview Tile
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = IsaiTheme.colors.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp)
+                    ) {
+                        WaveformSeekBar(
+                            peaks = null, // uses fallback for smooth preview
+                            progress = { 0.45f },
+                            style = state.seekBarStyle,
+                            colors = defaultSeekBarColors(),
+                            enabled = false,
+                            onScrubStart = {},
+                            onScrubPreview = {},
+                            onScrubEnd = { _, _ -> },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
                 }
@@ -400,6 +464,74 @@ fun SettingsScreen(
                         Text(
                             text = stringResource(id = R.string.settings_action_purge_missing),
                             color = IsaiTheme.colors.onSurfaceVariant
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Waveform Cache Info & Controls
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(id = R.string.settings_waveform_cache),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = IsaiTheme.colors.onBackground
+                            )
+                            Text(
+                                text = stringResource(id = R.string.settings_waveform_cache_desc, state.waveformCount),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = IsaiTheme.colors.onSurfaceVariant
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = { viewModel.clearWaveformCache() },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.settings_action_clear_waveform_cache),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = IsaiTheme.colors.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Pre-generate while charging
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(id = R.string.settings_pregenerate_waveforms),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = IsaiTheme.colors.onBackground
+                            )
+                            Text(
+                                text = stringResource(id = R.string.settings_pregenerate_waveforms_desc),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = IsaiTheme.colors.onSurfaceVariant
+                            )
+                        }
+
+                        Switch(
+                            checked = state.preGenerateWaveforms,
+                            onCheckedChange = { viewModel.setPreGenerateWaveforms(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = IsaiTheme.colors.onAccent,
+                                checkedTrackColor = IsaiTheme.colors.accent,
+                                uncheckedThumbColor = IsaiTheme.colors.onSurfaceVariant,
+                                uncheckedTrackColor = IsaiTheme.colors.surfaceVariant
+                            )
                         )
                     }
                 }

@@ -49,3 +49,4 @@ Welcome to the debut release of Isai!
 - Beautiful Dark and Light themes with dynamic album artwork palettes.
 - Favorites, playlist management, and sleep timer with fade-out.
 - 100% offline guarantee: Zero internet permissions. No ads, no analytics, no tracking.
+

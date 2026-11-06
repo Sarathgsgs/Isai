@@ -11,6 +11,7 @@ import com.isai.player.data.db.dao.HistoryDao
 import com.isai.player.data.db.dao.PlaylistDao
 import com.isai.player.data.db.dao.QueueDao
 import com.isai.player.data.db.dao.TrackDao
+import com.isai.player.data.db.dao.WaveformDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,7 +32,9 @@ object DatabaseModule {
             context,
             IsaiDatabase::class.java,
             IsaiDatabase.DATABASE_NAME
-        ).build()
+        )
+            .addMigrations(IsaiDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides
@@ -57,5 +60,7 @@ object DatabaseModule {
 
     @Provides
     fun provideQueueDao(database: IsaiDatabase): QueueDao = database.queueDao()
-}
 
+    @Provides
+    fun provideWaveformDao(database: IsaiDatabase): WaveformDao = database.waveformDao()
+}

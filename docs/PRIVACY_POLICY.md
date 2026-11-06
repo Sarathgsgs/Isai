@@ -77,3 +77,4 @@ Because Isai is completely offline and does not collect data, our data practices
 Isai is committed to full transparency. Users and developers are encouraged to inspect the application package (APK/AAB) or examine the Android Manifest to independently verify the complete absence of network permissions.
 
 For questions regarding this policy, contact the development team at `support@isai.player`.
+

@@ -5,6 +5,36 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0-waveform-seekbar] - 2026-11-06
+### Added
+- Add-on Round 1 / Prompt O: On-device audio waveform extraction, Room database schema v2 migration, high-performance Canvas WaveformSeekBar, shared tonearm scrub arbitration, and settings appearance options.
+- Waveform Generation & Audio DSP:
+  - `WaveformExtractor`: Hardware-accelerated PCM decoding using `MediaExtractor` and `MediaCodec` on a single-worker bounded dispatcher (`limitedParallelism(1)`).
+  - Time-based 200-bucket peak extraction ($\max |s|$) preserving musical transients and rhythm over RMS.
+  - 95th percentile normalization scaling and mild gamma curve ($\gamma = 0.7$) to keep quiet acoustic passages visually clear.
+  - Windowed seek-to decoding budget for long audio files (> 12 minutes).
+  - Clean resource release and prompt coroutine cancellation checking (`isActive`).
+- Room Database Migration v1 -> v2:
+  - `WaveformEntity`: Stores 200 peak amplitude bytes with Foreign Key cascade deletion to `TrackEntity`.
+  - `MIGRATION_1_2`: SQLite table creation migration with committed schema JSONs (`1.json` and `2.json`).
+  - Cache invalidation guards: `WAVEFORM_VERSION` check and `lastModified` track edit comparison.
+  - In-flight mutex (`ConcurrentHashMap`) preventing duplicate simultaneous decoding jobs.
+- Deterministic Calm Fallback:
+  - Smooth sinusoidal harmonic fallback uniquely seeded from `trackId` that seamlessly crossfades over 300ms.
+- High-Performance UI Component (`WaveformSeekBar`):
+  - Canvas rendering via `drawWithCache` and lambda-read `progress()` ensuring ZERO recompositions during playback ticks.
+  - Styles: `WAVEFORM_BARS` (mirrored rounded bars with gradient/accent played fill and active bar pop), `WAVEFORM_LINE` (smooth silhouette path), and `CLASSIC` (plain track and thumb).
+  - Horizontal scrubbing with vertical-slop cancellation, 5% tactile haptic ticks, and TalkBack slider semantics.
+- Tonearm & Seekbar Scrub Arbitration:
+  - `ScrubOwner` (`NONE`, `ARM`, `BAR`) in `NowPlayingViewModel` ensures dragging the waveform smoothly moves the tonearm in real time and dragging the tonearm moves the waveform playhead without input conflict.
+- Settings Integration:
+  - Appearance: Seekbar style selector (`AUTO`, `WAVEFORM_BARS`, `WAVEFORM_LINE`, `CLASSIC`) with live preview tile.
+  - Library: Waveform cache count display, "Clear Waveform Cache" button, and charging pre-generation preference.
+- Unit Tests:
+  - `WaveformMathTest`: Math validation for bucketing, percentile scaling, resampling, and fallback determinism.
+  - `WaveformRepositoryTest`: Verifies cache hits, stale version invalidation, and file edit detection.
+  - `ScrubOwnershipTest`: Verifies bidirectional tonearm and waveform scrub synchronization.
+
 ## [0.15.0-tests-perf-accessibility] - 2026-11-06
 ### Added
 - Phase 3 / Prompt M: Comprehensive TalkBack screen reader accessibility, custom accessibility actions, WCAG 2.1 AA contrast tuning, minimum 48dp touch bounds, and ART ahead-of-time baseline profiles.

@@ -2,6 +2,8 @@ package com.isai.player.data.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.isai.player.data.db.dao.AlbumDao
 import com.isai.player.data.db.dao.ArtistDao
 import com.isai.player.data.db.dao.FavoriteDao
@@ -10,12 +12,14 @@ import com.isai.player.data.db.dao.HistoryDao
 import com.isai.player.data.db.dao.PlaylistDao
 import com.isai.player.data.db.dao.QueueDao
 import com.isai.player.data.db.dao.TrackDao
+import com.isai.player.data.db.dao.WaveformDao
 import com.isai.player.data.db.entity.FavoriteEntity
 import com.isai.player.data.db.entity.PlayHistoryEntity
 import com.isai.player.data.db.entity.PlaylistEntity
 import com.isai.player.data.db.entity.PlaylistTrackEntity
 import com.isai.player.data.db.entity.QueueItemEntity
 import com.isai.player.data.db.entity.TrackEntity
+import com.isai.player.data.db.entity.WaveformEntity
 
 @Database(
     entities = [
@@ -24,9 +28,10 @@ import com.isai.player.data.db.entity.TrackEntity
         PlaylistTrackEntity::class,
         FavoriteEntity::class,
         PlayHistoryEntity::class,
-        QueueItemEntity::class
+        QueueItemEntity::class,
+        WaveformEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class IsaiDatabase : RoomDatabase() {
@@ -39,9 +44,27 @@ abstract class IsaiDatabase : RoomDatabase() {
     abstract fun playlistDao(): PlaylistDao
     abstract fun historyDao(): HistoryDao
     abstract fun queueDao(): QueueDao
+    abstract fun waveformDao(): WaveformDao
 
     companion object {
         const val DATABASE_NAME = "isai_player.db"
+
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `waveforms` (
+                        `track_id` INTEGER NOT NULL,
+                        `bucket_count` INTEGER NOT NULL,
+                        `peaks` BLOB NOT NULL,
+                        `version` INTEGER NOT NULL,
+                        `created_at` INTEGER NOT NULL,
+                        PRIMARY KEY(`track_id`),
+                        FOREIGN KEY(`track_id`) REFERENCES `tracks`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
     }
 }
-

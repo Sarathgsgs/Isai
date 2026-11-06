@@ -27,6 +27,8 @@ class SettingsRepositoryImpl @Inject constructor(
         val DYNAMIC_ACCENT_COLOR = booleanPreferencesKey("dynamic_accent_color")
         val SLEEP_TIMER_END = longPreferencesKey("sleep_timer_end")
         val SLEEP_TIMER_STOP_AT_END = booleanPreferencesKey("sleep_timer_stop_at_end")
+        val SEEK_BAR_STYLE = stringPreferencesKey("seek_bar_style")
+        val PRE_GENERATE_WAVEFORMS = booleanPreferencesKey("pre_generate_waveforms")
     }
 
     private val safePreferences: Flow<Preferences> = dataStore.data
@@ -66,6 +68,15 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override val sleepTimerStopAtEnd: Flow<Boolean> = safePreferences.map { prefs ->
         prefs[PreferencesKeys.SLEEP_TIMER_STOP_AT_END] ?: false
+    }
+
+    override val seekBarStyle: Flow<SeekBarStyle> = safePreferences.map { prefs ->
+        val raw = prefs[PreferencesKeys.SEEK_BAR_STYLE] ?: SeekBarStyle.AUTO.name
+        runCatching { SeekBarStyle.valueOf(raw) }.getOrDefault(SeekBarStyle.AUTO)
+    }
+
+    override val preGenerateWaveforms: Flow<Boolean> = safePreferences.map { prefs ->
+        prefs[PreferencesKeys.PRE_GENERATE_WAVEFORMS] ?: false
     }
 
     override suspend fun setThemeMode(mode: ThemeMode) {
@@ -113,5 +124,16 @@ class SettingsRepositoryImpl @Inject constructor(
             prefs.remove(PreferencesKeys.SLEEP_TIMER_STOP_AT_END)
         }
     }
-}
 
+    override suspend fun setSeekBarStyle(style: SeekBarStyle) {
+        dataStore.edit { prefs ->
+            prefs[PreferencesKeys.SEEK_BAR_STYLE] = style.name
+        }
+    }
+
+    override suspend fun setPreGenerateWaveforms(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[PreferencesKeys.PRE_GENERATE_WAVEFORMS] = enabled
+        }
+    }
+}

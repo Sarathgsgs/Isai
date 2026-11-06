@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.isai.player.data.repository.LibraryRepository
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.SettingsRepository
 import com.isai.player.data.repository.ThemeMode
+import com.isai.player.data.repository.WaveformRepository
 import com.isai.player.data.scanner.LibraryScanner
 import com.isai.player.data.scanner.ScanState
 import com.isai.player.playback.PlayerController
@@ -24,13 +26,16 @@ data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val liftBehavior: LiftBehavior = LiftBehavior.PAUSE,
     val dynamicAccentColor: Boolean = true,
+    val seekBarStyle: SeekBarStyle = SeekBarStyle.AUTO,
     val selectedFolderUri: String? = null,
     val selectedFolderName: String? = null,
     val isScanning: Boolean = false,
     val scanStatusMessage: String? = null,
     val purgedCount: Int? = null,
     val sleepTimerRemainingMs: Long = 0L,
-    val isStopAtEndOfTrack: Boolean = false
+    val isStopAtEndOfTrack: Boolean = false,
+    val waveformCount: Int = 0,
+    val preGenerateWaveforms: Boolean = false
 )
 
 @HiltViewModel
@@ -38,7 +43,8 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val libraryRepository: LibraryRepository,
     private val libraryScanner: LibraryScanner,
-    private val playerController: PlayerController
+    private val playerController: PlayerController,
+    private val waveformRepository: WaveformRepository
 ) : ViewModel() {
 
     private val scanMessageFlow = MutableStateFlow<String?>(null)
@@ -48,14 +54,25 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.themeMode,
         settingsRepository.liftBehavior,
         settingsRepository.dynamicAccentColor,
+        settingsRepository.seekBarStyle,
+        settingsRepository.preGenerateWaveforms,
+        waveformRepository.observeWaveformCount(),
         settingsRepository.selectedFolderUri,
         settingsRepository.selectedFolderName,
         libraryScanner.scanState,
-        playerController.sleepTimer.remainingMs,
-        playerController.sleepTimer.isStopAtEndOfTrack,
-        scanMessageFlow,
-        purgedCountFlow
-    ) { theme, lift, dynamicAccent, folderUri, folderName, scanState, timerRemaining, stopAtEnd, scanMsg, purged ->
+        scanMessageFlow
+    ) { args: Array<Any?> ->
+        val theme = args[0] as ThemeMode
+        val lift = args[1] as LiftBehavior
+        val dynamicAccent = args[2] as Boolean
+        val seekStyle = args[3] as SeekBarStyle
+        val preGenWaveforms = args[4] as Boolean
+        val waveCount = args[5] as Int
+        val folderUri = args[6] as String?
+        val folderName = args[7] as String?
+        val scanState = args[8] as ScanState
+        val scanMsg = args[9] as String?
+
         val isScanning = scanState is ScanState.Scanning
         val statusMsg = when (scanState) {
             is ScanState.Completed -> "Scan complete: ${scanState.totalTracks} total tracks"
@@ -67,13 +84,16 @@ class SettingsViewModel @Inject constructor(
             themeMode = theme,
             liftBehavior = lift,
             dynamicAccentColor = dynamicAccent,
+            seekBarStyle = seekStyle,
             selectedFolderUri = folderUri,
             selectedFolderName = folderName,
             isScanning = isScanning,
             scanStatusMessage = statusMsg,
-            purgedCount = purged,
-            sleepTimerRemainingMs = timerRemaining,
-            isStopAtEndOfTrack = stopAtEnd
+            purgedCount = purgedCountFlow.value,
+            sleepTimerRemainingMs = playerController.sleepTimer.remainingMs.value,
+            isStopAtEndOfTrack = playerController.sleepTimer.isStopAtEndOfTrack.value,
+            waveformCount = waveCount,
+            preGenerateWaveforms = preGenWaveforms
         )
     }.stateIn(
         scope = viewModelScope,
@@ -96,6 +116,24 @@ class SettingsViewModel @Inject constructor(
     fun setDynamicAccentColor(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setDynamicAccentColor(enabled)
+        }
+    }
+
+    fun setSeekBarStyle(style: SeekBarStyle) {
+        viewModelScope.launch {
+            settingsRepository.setSeekBarStyle(style)
+        }
+    }
+
+    fun setPreGenerateWaveforms(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setPreGenerateWaveforms(enabled)
+        }
+    }
+
+    fun clearWaveformCache() {
+        viewModelScope.launch {
+            waveformRepository.clearWaveformCache()
         }
     }
 
@@ -135,4 +173,3 @@ class SettingsViewModel @Inject constructor(
         libraryScanner.resetState()
     }
 }
-

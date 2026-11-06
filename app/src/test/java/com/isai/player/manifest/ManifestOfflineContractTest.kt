@@ -56,3 +56,4 @@ class ManifestOfflineContractTest {
         assertTrue("Manifest must declare WAKE_LOCK", text.contains("android.permission.WAKE_LOCK"))
     }
 }
+

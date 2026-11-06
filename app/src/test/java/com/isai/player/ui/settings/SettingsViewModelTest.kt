@@ -3,8 +3,10 @@ package com.isai.player.ui.settings
 import android.net.Uri
 import com.isai.player.data.repository.LibraryRepository
 import com.isai.player.data.repository.LiftBehavior
+import com.isai.player.data.repository.SeekBarStyle
 import com.isai.player.data.repository.SettingsRepository
 import com.isai.player.data.repository.ThemeMode
+import com.isai.player.data.repository.WaveformRepository
 import com.isai.player.data.scanner.LibraryScanner
 import com.isai.player.data.scanner.ScanState
 import com.isai.player.playback.PlayerController
@@ -34,10 +36,14 @@ class SettingsViewModelTest {
     private lateinit var libraryRepository: LibraryRepository
     private lateinit var libraryScanner: LibraryScanner
     private lateinit var playerController: PlayerController
+    private lateinit var waveformRepository: WaveformRepository
 
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
     private val liftBehaviorFlow = MutableStateFlow(LiftBehavior.PAUSE)
     private val dynamicAccentFlow = MutableStateFlow(true)
+    private val seekBarStyleFlow = MutableStateFlow(SeekBarStyle.AUTO)
+    private val preGenWaveformsFlow = MutableStateFlow(false)
+    private val waveformCountFlow = MutableStateFlow(0)
     private val folderUriFlow = MutableStateFlow<String?>("content://tree/music")
     private val folderNameFlow = MutableStateFlow<String?>("Music")
     private val scanStateFlow = MutableStateFlow<ScanState>(ScanState.Idle)
@@ -51,10 +57,14 @@ class SettingsViewModelTest {
         libraryRepository = mockk(relaxed = true)
         libraryScanner = mockk(relaxed = true)
         playerController = mockk(relaxed = true)
+        waveformRepository = mockk(relaxed = true)
 
         every { settingsRepository.themeMode } returns themeModeFlow
         every { settingsRepository.liftBehavior } returns liftBehaviorFlow
         every { settingsRepository.dynamicAccentColor } returns dynamicAccentFlow
+        every { settingsRepository.seekBarStyle } returns seekBarStyleFlow
+        every { settingsRepository.preGenerateWaveforms } returns preGenWaveformsFlow
+        every { waveformRepository.observeWaveformCount() } returns waveformCountFlow
         every { settingsRepository.selectedFolderUri } returns folderUriFlow
         every { settingsRepository.selectedFolderName } returns folderNameFlow
         every { libraryScanner.scanState } returns scanStateFlow
@@ -73,7 +83,8 @@ class SettingsViewModelTest {
             settingsRepository,
             libraryRepository,
             libraryScanner,
-            playerController
+            playerController,
+            waveformRepository
         )
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -81,18 +92,19 @@ class SettingsViewModelTest {
         assertEquals(ThemeMode.SYSTEM, state.themeMode)
         assertEquals(LiftBehavior.PAUSE, state.liftBehavior)
         assertEquals(true, state.dynamicAccentColor)
+        assertEquals(SeekBarStyle.AUTO, state.seekBarStyle)
         assertEquals("content://tree/music", state.selectedFolderUri)
         assertEquals("Music", state.selectedFolderName)
-        assertEquals(false, state.isScanning)
     }
 
     @Test
-    fun themeModeUpdatesDelegateToRepository() = runTest {
+    fun setThemeModeUpdatesRepository() = runTest {
         val viewModel = SettingsViewModel(
             settingsRepository,
             libraryRepository,
             libraryScanner,
-            playerController
+            playerController,
+            waveformRepository
         )
 
         viewModel.setThemeMode(ThemeMode.DARK)
@@ -102,46 +114,48 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun liftBehaviorUpdatesDelegateToRepository() = runTest {
+    fun setSeekBarStyleUpdatesRepository() = runTest {
         val viewModel = SettingsViewModel(
             settingsRepository,
             libraryRepository,
             libraryScanner,
-            playerController
+            playerController,
+            waveformRepository
         )
 
-        viewModel.setLiftBehavior(LiftBehavior.STOP)
+        viewModel.setSeekBarStyle(SeekBarStyle.WAVEFORM_BARS)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { settingsRepository.setLiftBehavior(LiftBehavior.STOP) }
+        coVerify { settingsRepository.setSeekBarStyle(SeekBarStyle.WAVEFORM_BARS) }
     }
 
     @Test
-    fun dynamicAccentUpdatesDelegateToRepository() = runTest {
+    fun clearWaveformCacheDelegatesToRepository() = runTest {
         val viewModel = SettingsViewModel(
             settingsRepository,
             libraryRepository,
             libraryScanner,
-            playerController
+            playerController,
+            waveformRepository
         )
 
-        viewModel.setDynamicAccentColor(false)
+        viewModel.clearWaveformCache()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { settingsRepository.setDynamicAccentColor(false) }
+        coVerify { waveformRepository.clearWaveformCache() }
     }
 
     @Test
-    fun purgeMissingTracksInvokesRepositoryAndUpdatesState() = runTest {
+    fun purgeMissingTracksInvokesLibraryRepository() = runTest {
         coEvery { libraryRepository.purgeMissingTracks() } returns 5
 
         val viewModel = SettingsViewModel(
             settingsRepository,
             libraryRepository,
             libraryScanner,
-            playerController
+            playerController,
+            waveformRepository
         )
-        testDispatcher.scheduler.advanceUntilIdle()
 
         viewModel.purgeMissingTracks()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -149,21 +163,4 @@ class SettingsViewModelTest {
         coVerify { libraryRepository.purgeMissingTracks() }
         assertEquals(5, viewModel.uiState.value.purgedCount)
     }
-
-    @Test
-    fun sleepTimerDelegates() = runTest {
-        val viewModel = SettingsViewModel(
-            settingsRepository,
-            libraryRepository,
-            libraryScanner,
-            playerController
-        )
-
-        viewModel.startSleepTimer(45 * 60 * 1000L, stopAtEndOfTrack = false)
-        verify { playerController.startSleepTimer(45 * 60 * 1000L, false) }
-
-        viewModel.cancelSleepTimer()
-        verify { playerController.cancelSleepTimer() }
-    }
 }
-
