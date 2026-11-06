@@ -31,6 +31,22 @@ interface HistoryDao {
     )
     fun observeRecentlyPlayed(limit: Int = 30): Flow<List<TrackEntity>>
 
+    @Query(
+        """
+        SELECT tracks.* FROM tracks
+        INNER JOIN (
+            SELECT track_id, MAX(played_at) AS latest_play
+            FROM play_history
+            GROUP BY track_id
+            ORDER BY latest_play DESC
+            LIMIT :limit
+        ) AS recent ON tracks.id = recent.track_id
+        WHERE tracks.is_missing = 0
+        ORDER BY recent.latest_play DESC
+        """
+    )
+    suspend fun getRecentlyPlayedSync(limit: Int = 20): List<TrackEntity>
+
     @Query("DELETE FROM play_history")
     suspend fun clearHistory()
 

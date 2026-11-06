@@ -40,6 +40,17 @@ interface FavoriteDao {
     @Query("SELECT COUNT(*) FROM favorites")
     fun observeFavoriteCount(): Flow<Int>
 
+    @Query(
+        """
+        SELECT tracks.* FROM tracks
+        INNER JOIN favorites ON tracks.id = favorites.track_id
+        WHERE tracks.is_missing = 0
+        ORDER BY favorites.added_at DESC
+        LIMIT :limit
+        """
+    )
+    suspend fun getFavoriteTracksSync(limit: Int = 200): List<TrackEntity>
+
     @Transaction
     suspend fun toggleFavorite(trackId: Long) {
         if (isFavorite(trackId)) {

@@ -100,6 +100,18 @@ interface TrackDao {
     )
     fun searchTracks(query: String): Flow<List<TrackEntity>>
 
+    @Query("SELECT * FROM tracks WHERE is_missing = 0 ORDER BY title_sort COLLATE NOCASE ASC LIMIT :limit OFFSET :offset")
+    suspend fun getTracksPaged(limit: Int, offset: Int): List<TrackEntity>
+
+    @Query("SELECT * FROM tracks WHERE is_missing = 0 ORDER BY RANDOM() LIMIT :limit")
+    suspend fun getRandomTracks(limit: Int): List<TrackEntity>
+
+    @Query("SELECT * FROM tracks WHERE is_missing = 0 AND album = :album ORDER BY track_no ASC")
+    suspend fun getTracksByAlbum(album: String): List<TrackEntity>
+
+    @Query("SELECT * FROM tracks WHERE is_missing = 0 AND artist = :artist ORDER BY album COLLATE NOCASE ASC, track_no ASC")
+    suspend fun getTracksByArtist(artist: String): List<TrackEntity>
+
     // Missing tracks handling
     @Query("UPDATE tracks SET is_missing = 1 WHERE uri IN (:uris)")
     suspend fun markTracksMissing(uris: List<String>)

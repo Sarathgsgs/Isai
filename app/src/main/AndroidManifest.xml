@@ -32,16 +32,29 @@
             </intent-filter>
         </activity>
 
-        <!-- Media3 Playback Service -->
+        <!-- Automotive App Descriptor for Android Auto -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+
+        <!-- Media3 Playback Service & MediaLibraryService for Android Auto & Bluetooth -->
         <service
             android:name=".playback.PlaybackService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true">
             <intent-filter>
+                <action android:name="androidx.media3.session.MediaLibraryService" />
                 <action android:name="androidx.media3.session.MediaSessionService" />
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
+
+        <!-- Secure Content Provider serving cached album art for Car Displays -->
+        <provider
+            android:name=".playback.car.CarArtworkProvider"
+            android:authorities="${applicationId}.artwork"
+            android:exported="true"
+            android:grantUriPermissions="true" />
 
         <!-- Jetpack Glance Turntable AppWidget -->
         <receiver

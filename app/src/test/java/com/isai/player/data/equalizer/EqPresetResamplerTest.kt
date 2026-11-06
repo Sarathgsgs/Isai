@@ -71,3 +71,4 @@ class EqPresetResamplerTest {
         assertEquals(800, resampled[3]) // clamped to last (8.0 dB = 800 mB)
     }
 }
+

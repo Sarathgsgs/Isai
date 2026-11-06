@@ -140,3 +140,4 @@ class EqualizerViewModel @Inject constructor(
         return playerController.launchSystemEqualizer(context)
     }
 }
+

@@ -45,6 +45,29 @@ interface PlaylistDao {
 
     @Query(
         """
+        SELECT 
+            playlists.*,
+            COUNT(playlist_tracks.track_id) AS track_count
+        FROM playlists
+        LEFT JOIN playlist_tracks ON playlists.id = playlist_tracks.playlist_id
+        GROUP BY playlists.id
+        ORDER BY playlists.name COLLATE NOCASE ASC
+        """
+    )
+    suspend fun getAllPlaylistsSync(): List<PlaylistWithCount>
+
+    @Query(
+        """
+        SELECT tracks.* FROM tracks
+        INNER JOIN playlist_tracks ON tracks.id = playlist_tracks.track_id
+        WHERE playlist_tracks.playlist_id = :playlistId AND tracks.is_missing = 0
+        ORDER BY playlist_tracks.position ASC
+        """
+    )
+    suspend fun getTracksForPlaylistSync(playlistId: Long): List<TrackEntity>
+
+    @Query(
+        """
         SELECT tracks.* FROM tracks
         INNER JOIN playlist_tracks ON tracks.id = playlist_tracks.track_id
         WHERE playlist_tracks.playlist_id = :playlistId AND tracks.is_missing = 0

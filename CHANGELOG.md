@@ -5,6 +5,39 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0-android-auto] - 2026-11-06
+### Added
+- Add-on Round 2 / Prompt T: Android Auto, Bluetooth car browsing, and Google Assistant voice control support via MediaLibraryService migration.
+- `PlaybackService` Migration to `MediaLibraryService`:
+  - Migrated `PlaybackService` from `MediaSessionService` to `MediaLibraryService`.
+  - Built `MediaLibrarySession` implementing `MediaLibrarySession.Callback` for tree browsing, paging, and voice queries.
+  - Fully backward-compatible with phone playback, notification channel, widget updater, sleep timer, and tonearm synchronization.
+- Automotive Browse Tree (`MediaBrowseTree`):
+  - 6 structured root categories: Recently Played (List), Favorites (List), Playlists (List), Albums (Grid), Artists (Grid), All Songs (List).
+  - "Shuffle All" primary action header in the All Songs section.
+  - Standard Android Auto content style hints (`CONTENT_STYLE_GRID_ITEM` vs `CONTENT_STYLE_LIST_ITEM`).
+  - Paged off-thread loading using Room DAOs (`TrackDao`, `AlbumDao`, `ArtistDao`, `PlaylistDao`, `FavoriteDao`, `HistoryDao`).
+- Secure Car Artwork Provider (`CarArtworkProvider`):
+  - Read-only `ContentProvider` serving cached album art to head units via `content://com.isai.player.artwork/<trackId>`.
+  - Robust path-traversal guards rejecting directory traversal characters (`..`, `/`, `\`, `%`).
+- Caller Package Validation (`PackageValidator`):
+  - Classifies client trust levels (`SELF`, `TRUSTED_AUTOMOTIVE`, `TRUSTED_ASSISTANT`, `TRUSTED_SYSTEM`, `UNTRUSTED_READ_ONLY`).
+  - Protects queue modification and playback permissions against untrusted callers.
+- Google Assistant Voice Search (`VoiceSearchResolver`):
+  - Handles `onSearch` and `onGetSearchResult` voice queries.
+  - Resolves queries to specific tracks, entire artist catalogs, albums in track order, or library shuffle.
+- Car Custom Actions:
+  - Supports `com.isai.player.action.TOGGLE_FAVORITE` directly from automotive head units.
+- Automotive Manifest & Documentation:
+  - Declared `res/xml/automotive_app_desc.xml` with `<uses name="media"/>`.
+  - Registered `MediaLibraryService` and `MediaBrowserService` intent filters in `AndroidManifest.xml`.
+  - Added comprehensive Desktop Head Unit (DHU) guide in `docs/android-auto.md`.
+- Unit Tests:
+  - `PackageValidatorTest`: Validates caller package trust classification.
+  - `CarArtworkProviderTest`: Validates URI path parsing and path traversal security rejection.
+  - `MediaBrowseTreeTest`: Validates 6 root nodes, content style hints, and hierarchy.
+  - `VoiceSearchResolverTest`: Validates query resolution for artist, album, title, and shuffle fallback.
+
 ## [0.19.0-equalizer] - 2026-11-06
 ### Added
 - Add-on Round 2 / Prompt S: Complete Equalizer and Audio Effects Engine with dynamic device band probing, log-frequency Catmull-Rom spline curve, automatic clipping compensation, and system panel interop.

@@ -56,3 +56,4 @@ class EqualizerRepositoryTest {
         assertEquals(4.0f, presets[0].referenceGainsDb[0], 0.01f)
     }
 }
+

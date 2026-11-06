@@ -18,3 +18,4 @@ interface EqualizerRepository {
     suspend fun saveCustomPreset(preset: EqPreset)
     suspend fun deleteCustomPreset(presetName: String)
 }
+

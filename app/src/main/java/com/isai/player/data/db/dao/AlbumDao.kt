@@ -98,5 +98,31 @@ interface AlbumDao {
         """
     )
     fun observeTracksForAlbum(album: String): Flow<List<TrackEntity>>
+
+    @Query(
+        """
+        SELECT 
+            album,
+            album_artist,
+            COUNT(*) AS track_count,
+            MIN(year) AS min_year,
+            MAX(art_path) AS art_path
+        FROM tracks
+        WHERE is_missing = 0 AND album != ''
+        GROUP BY album, album_artist
+        ORDER BY album COLLATE NOCASE ASC
+        LIMIT :limit OFFSET :offset
+        """
+    )
+    suspend fun getAlbumsPaged(limit: Int, offset: Int): List<AlbumProjection>
+
+    @Query(
+        """
+        SELECT * FROM tracks
+        WHERE is_missing = 0 AND album = :album
+        ORDER BY disc_no ASC, track_no ASC, title_sort COLLATE NOCASE ASC
+        """
+    )
+    suspend fun getTracksForAlbumSync(album: String): List<TrackEntity>
 }
 

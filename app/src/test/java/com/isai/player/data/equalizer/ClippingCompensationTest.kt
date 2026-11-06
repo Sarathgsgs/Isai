@@ -62,3 +62,4 @@ class ClippingCompensationTest {
         assertEquals(0f, analysis.attenuationDb, 0.01f)
     }
 }
+

@@ -287,4 +287,14 @@
     <string name="equalizer_save_custom_preset_title">Save Custom Preset</string>
     <string name="equalizer_save_custom_preset_prompt">Enter a name for your custom equalizer curve:</string>
     <string name="equalizer_preset_name_placeholder">e.g. Warm Acoustic</string>
+
+    <!-- Android Auto & Automotive Car Browse -->
+    <string name="car_node_recent">Recently Played</string>
+    <string name="car_node_favorites">Favorites</string>
+    <string name="car_node_playlists">Playlists</string>
+    <string name="car_node_albums">Albums</string>
+    <string name="car_node_artists">Artists</string>
+    <string name="car_node_songs">All Songs</string>
+    <string name="car_action_shuffle_all">Shuffle All</string>
+    <string name="car_track_count">%1$d tracks</string>
 </resources>

@@ -63,3 +63,4 @@ object EqPresets {
         EqPreset("Late Night", referenceGainsDb = listOf(3.0f, 2.0f, 0f, -1.0f, -1.0f, -1.0f, -1.5f, -2.0f, -3.0f, -4.0f))
     )
 }
+
