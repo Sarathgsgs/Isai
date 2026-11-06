@@ -88,3 +88,4 @@ class TonearmGeometryTest {
         assertEquals(geometry.rInner, distInner, 0.5f)
     }
 }
+

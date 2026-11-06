@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,18 +27,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,14 +49,19 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isai.player.R
 import com.isai.player.data.repository.ThemeMode
 import com.isai.player.ui.theme.CardShape
 import com.isai.player.ui.theme.IsaiTheme
+import com.isai.player.util.Formatters
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,8 +70,15 @@ fun TonearmLabScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scope = rememberCoroutineScope()
     var isDarkTheme by remember { mutableStateOf(true) }
     var showDebugOverlay by remember { mutableStateOf(true) }
+
+    // FakePlayer instance
+    val fakePlayer = remember { FakePlayer(scope) }
+    val isPlaying by fakePlayer.isPlaying.collectAsStateWithLifecycle()
+    val positionMs by fakePlayer.positionMs.collectAsStateWithLifecycle()
+    val hasTrack by fakePlayer.hasTrack.collectAsStateWithLifecycle()
 
     // Standalone stage measurements (360 x 360 dp)
     val density = LocalDensity.current
@@ -74,16 +90,41 @@ fun TonearmLabScreen(
         TonearmGeometry.forDisc(discCenter, discRadius)
     }
 
-    var currentAngle by remember(geometry) { mutableFloatStateOf(geometry.alphaOuter) }
-    var currentLift by remember { mutableFloatStateOf(0f) }
-
+    val tonearmState = rememberTonearmState(geometry, scope)
     val tonearmColors = if (isDarkTheme) TonearmColors.dark() else TonearmColors.light()
+
+    // Real-time scrubbing preview state
+    var scrubPreviewProgress by remember { mutableStateOf<Float?>(null) }
+    val currentProgress = scrubPreviewProgress ?: (positionMs.toFloat() / fakePlayer.durationMs.toFloat())
+
+    // Event Log
+    val eventLogs = remember { mutableStateListOf<String>() }
+    val timeFormatter = remember { SimpleDateFormat("HH:mm:ss.SSS", Locale.US) }
+
+    fun logEvent(event: String) {
+        val timestamp = timeFormatter.format(Date())
+        eventLogs.add(0, "[$timestamp] $event")
+        if (eventLogs.size > 20) {
+            eventLogs.removeAt(eventLogs.lastIndex)
+        }
+    }
+
+    // React to playback state changes
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) {
+            tonearmState.animateLower()
+            logEvent("Player: PLAY -> Tonearm lowering with bounce")
+        } else {
+            tonearmState.animatePark()
+            logEvent("Player: PAUSE -> Tonearm lifting to park")
+        }
+    }
 
     IsaiTheme(themeMode = if (isDarkTheme) ThemeMode.DARK else ThemeMode.LIGHT) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Prompt A: Tonearm Lab") },
+                    title = { Text("Prompt B: Motion & Gestures") },
                     navigationIcon = {
                         IconButton(onClick = onBackClick) {
                             Icon(
@@ -109,27 +150,25 @@ fun TonearmLabScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 360 dp square testing stage
+                // 360 dp square interactive testing stage
                 Box(
                     modifier = Modifier
                         .size(360.dp)
                         .background(IsaiTheme.colors.surface)
                 ) {
-                    // 1. Placeholder disc: black circle with center dot at geometry.center
+                    // 1. Placeholder disc: black circle with center dot
                     Canvas(modifier = Modifier.fillMaxSize()) {
                         drawCircle(
                             color = Color(0xFF121216),
                             radius = discRadius,
                             center = discCenter
                         )
-                        // Outer rim outline
                         drawCircle(
                             color = Color(0xFF2C2D35),
                             radius = discRadius,
                             center = discCenter,
                             style = Stroke(width = 2.dp.toPx())
                         )
-                        // Lighter center dot
                         drawCircle(
                             color = Color(0xFF888B96),
                             radius = 6.dp.toPx(),
@@ -137,11 +176,39 @@ fun TonearmLabScreen(
                         )
                     }
 
-                    // 2. Tonearm Canvas layer
-                    Tonearm(
-                        geometry = geometry,
-                        angleDeg = { currentAngle },
-                        lift = { currentLift },
+                    // 2. Interactive Tonearm Layer with hit target, touch scale & gesture tracking
+                    TonearmInteractiveContainer(
+                        state = tonearmState,
+                        progress = { currentProgress },
+                        isPlaying = isPlaying,
+                        hasTrack = hasTrack,
+                        onScrubStart = {
+                            logEvent("onScrubStart -> dragging headshell")
+                        },
+                        onScrubPreview = { previewProg ->
+                            scrubPreviewProgress = previewProg
+                        },
+                        onScrubEnd = { commit, finalProgress ->
+                            scrubPreviewProgress = null
+                            if (commit) {
+                                fakePlayer.seekToProgress(finalProgress)
+                                fakePlayer.play()
+                                val time = Formatters.formatDurationMs((finalProgress * fakePlayer.durationMs).toLong())
+                                logEvent("onScrubEnd (COMMIT) -> seeked to $time (${String.format(Locale.US, "%.1f%%", finalProgress * 100f)}) & resumed")
+                            } else {
+                                logEvent("onScrubEnd (CANCELED)")
+                            }
+                        },
+                        onLiftedStop = {
+                            scrubPreviewProgress = null
+                            val behavior = fakePlayer.liftBehavior
+                            fakePlayer.handleLiftedStop()
+                            logEvent("onLiftedStop -> needle lifted off record ($behavior)")
+                        },
+                        onTapToggle = {
+                            fakePlayer.togglePlayPause()
+                            logEvent("onTapToggle -> toggled playback: isPlaying=${!isPlaying}")
+                        },
                         colors = tonearmColors,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -149,7 +216,6 @@ fun TonearmLabScreen(
                     // 3. Debug Overlay Layer
                     if (showDebugOverlay) {
                         Canvas(modifier = Modifier.fillMaxSize()) {
-                            // Disc outer and inner groove circles
                             drawCircle(
                                 color = Color.Cyan.copy(alpha = 0.5f),
                                 radius = geometry.rOuter,
@@ -162,15 +228,11 @@ fun TonearmLabScreen(
                                 center = discCenter,
                                 style = Stroke(width = 1.dp.toPx())
                             )
-
-                            // Pivot point indicator
                             drawCircle(
                                 color = Color.Red,
                                 radius = 4.dp.toPx(),
                                 center = geometry.pivot
                             )
-
-                            // Stylus travel arc
                             val arcPath = Path()
                             val steps = 40
                             for (i in 0..steps) {
@@ -184,64 +246,61 @@ fun TonearmLabScreen(
                                 color = Color.Green.copy(alpha = 0.6f),
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
-
-                            // Current Stylus tip dot
-                            val currentTip = geometry.stylusPosition(currentAngle)
-                            drawCircle(
-                                color = Color.Yellow,
-                                radius = 3.dp.toPx(),
-                                center = currentTip
-                            )
-
-                            // 56 dp interaction hit area circle around headshell
-                            drawCircle(
-                                color = Color.Yellow.copy(alpha = 0.25f),
-                                radius = 28.dp.toPx(),
-                                center = currentTip,
-                                style = Stroke(width = 1.dp.toPx())
-                            )
                         }
                     }
                 }
 
-                // Controls & Live Readouts
+                // Controls, Timeline Labels & Event Logs
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    // Live stats card
+                    // Playback Timeline & Scrub Readout
+                    val displayedPositionMs = (currentProgress * fakePlayer.durationMs).toLong()
+                    val remainingMs = (fakePlayer.durationMs - displayedPositionMs).coerceAtLeast(0L)
+
                     Card(
                         shape = CardShape,
                         colors = CardDefaults.cardColors(containerColor = IsaiTheme.colors.surface),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            val progress = geometry.progressFromAngle(currentAngle)
-                            val isOnRecord = geometry.isOnRecord(currentAngle)
-
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = Formatters.formatDurationMs(displayedPositionMs),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (scrubPreviewProgress != null) IsaiTheme.colors.accent else IsaiTheme.colors.onBackground
+                                )
+                                if (scrubPreviewProgress != null) {
+                                    Text(
+                                        text = "SCRUBBING",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = IsaiTheme.colors.accent
+                                    )
+                                }
+                                Text(
+                                    text = "-${Formatters.formatDurationMs(remainingMs)}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = IsaiTheme.colors.onSurfaceVariant
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            val displayDeg = tonearmState.displayAngle(currentProgress)
                             Text(
                                 text = String.format(
                                     Locale.US,
-                                    "Angle: %.1f° | Progress: %.1f%% | On Record: %s",
-                                    currentAngle,
-                                    progress * 100f,
-                                    if (isOnRecord) "YES" else "NO"
+                                    "Angle: %.1f° | Progress: %.1f%% | Groove: %s",
+                                    displayDeg,
+                                    currentProgress * 100f,
+                                    if (geometry.isOnRecord(displayDeg)) "LOCKED" else "OFF DISC"
                                 ),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isOnRecord) IsaiTheme.colors.accent else IsaiTheme.colors.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = String.format(
-                                    Locale.US,
-                                    "α_rest: %.1f° | α_outer: %.1f° | α_inner: %.1f°",
-                                    geometry.alphaRest,
-                                    geometry.alphaOuter,
-                                    geometry.alphaInner
-                                ),
-                                style = MaterialTheme.typography.labelMedium,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = IsaiTheme.colors.onSurfaceVariant
                             )
                         }
@@ -249,43 +308,95 @@ fun TonearmLabScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Angle Slider (alphaRest .. alphaInner)
-                    Text(
-                        text = "Arm Angle: ${String.format(Locale.US, "%.1f°", currentAngle)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = IsaiTheme.colors.onBackground
-                    )
-                    Slider(
-                        value = currentAngle,
-                        onValueChange = { currentAngle = it },
-                        valueRange = geometry.alphaRest..geometry.alphaInner,
-                        colors = SliderDefaults.colors(
-                            thumbColor = IsaiTheme.colors.accent,
-                            activeTrackColor = IsaiTheme.colors.accent
-                        )
-                    )
+                    // Player Buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = { fakePlayer.togglePlayPause() },
+                            colors = ButtonDefaults.buttonColors(containerColor = IsaiTheme.colors.accent),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(if (isPlaying) "Pause" else "Play")
+                        }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Lift Slider (0 .. 1)
-                    Text(
-                        text = "Lift Height: ${String.format(Locale.US, "%.2f", currentLift)} (${if (currentLift == 0f) "On Disc" else "Parked"})",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = IsaiTheme.colors.onBackground
-                    )
-                    Slider(
-                        value = currentLift,
-                        onValueChange = { currentLift = it },
-                        valueRange = 0f..1f,
-                        colors = SliderDefaults.colors(
-                            thumbColor = IsaiTheme.colors.accent,
-                            activeTrackColor = IsaiTheme.colors.accent
-                        )
-                    )
+                        Button(
+                            onClick = {
+                                fakePlayer.handleLiftedStop()
+                                logEvent("External Stop/Pause event triggered")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = IsaiTheme.colors.surfaceVariant),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Lift Needle",
+                                color = IsaiTheme.colors.onBackground
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Toggles: Theme and Debug Overlay
+                    // Settings: Lift behavior & Track Loaded
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Lift Behavior",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = IsaiTheme.colors.onBackground
+                            )
+                            Text(
+                                text = if (fakePlayer.liftBehavior == LiftBehavior.PAUSE) "Pause at position" else "Stop & reset to 0:00",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = IsaiTheme.colors.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = fakePlayer.liftBehavior == LiftBehavior.STOP,
+                            onCheckedChange = { isStop ->
+                                fakePlayer.liftBehavior = if (isStop) LiftBehavior.STOP else LiftBehavior.PAUSE
+                                logEvent("Setting: Lift Behavior -> ${fakePlayer.liftBehavior}")
+                            }
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Track Loaded",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = IsaiTheme.colors.onBackground
+                            )
+                            Text(
+                                text = if (hasTrack) "Track active (allows seek)" else "No track (triggers deny shake on touch)",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = IsaiTheme.colors.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = hasTrack,
+                            onCheckedChange = {
+                                fakePlayer.setHasTrack(it)
+                                logEvent("Setting: HasTrack -> $it")
+                            }
+                        )
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -302,20 +413,48 @@ fun TonearmLabScreen(
                         )
                     }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Live Event Log Card
+                    Text(
+                        text = "Real-time Event Log",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = IsaiTheme.colors.onBackground
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        shape = CardShape,
+                        colors = CardDefaults.cardColors(containerColor = IsaiTheme.colors.surface),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
                     ) {
-                        Text(
-                            text = "Debug Overlay (Grooves, Stylus Arc, Pivot)",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = IsaiTheme.colors.onBackground
-                        )
-                        Switch(
-                            checked = showDebugOverlay,
-                            onCheckedChange = { showDebugOverlay = it }
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(12.dp)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            if (eventLogs.isEmpty()) {
+                                Text(
+                                    text = "Interact with the tonearm or player controls to log events...",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = IsaiTheme.colors.onSurfaceVariant
+                                )
+                            } else {
+                                eventLogs.forEach { log ->
+                                    Text(
+                                        text = log,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 11.sp,
+                                        color = if (log.contains("COMMIT")) IsaiTheme.colors.accent else IsaiTheme.colors.onBackground
+                                    )
+                                    Spacer(modifier = Modifier.height(3.dp))
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -323,8 +462,8 @@ fun TonearmLabScreen(
     }
 }
 
-@Preview(name = "TonearmLabScreen - Dark Theme")
+@Preview(name = "TonearmLabScreen - Prompt B Preview")
 @Composable
-private fun TonearmLabScreenDarkPreview() {
+private fun TonearmLabScreenPreview() {
     TonearmLabScreen(onBackClick = {})
 }
