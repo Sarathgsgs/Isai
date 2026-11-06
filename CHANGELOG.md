@@ -5,6 +5,30 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0-favorites-playlists-sleep-timer] - 2026-11-06
+### Added
+- Phase 3 / Prompt J: Offline Favorites screen, Playlist lifecycle management (Create, Rename, Delete, Reorder, Add), Multi-select Track Picker, and Sleep Timer UI dialog.
+- `FavoritesScreen` & `FavoritesViewModel`:
+  - Full reactive favorite songs stream powered by `FavoritesRepository.observeFavoriteTracks()`.
+  - Favorites hero header with heart badge, track counter, total duration, and Play All / Shuffle buttons.
+  - Track rows with 3-dot context menu supporting instant unfavorite, play next, and add to queue.
+  - Heart-themed empty state when no songs have been favorited yet.
+- Playlist Management & Lifecycle:
+  - `CreatePlaylistDialog`: Dialog for creating new playlists and renaming existing playlists with instant input validation.
+  - `AddToPlaylistDialog`: Quick selection dialog to append tracks to existing playlists or create a new playlist on the fly.
+  - `TrackPickerBottomSheet`: Multi-select modal bottom sheet with search filtering and batch track addition to playlists.
+  - Upgraded Playlists tab in `LibraryScreen`: "+ Create Playlist" action header, playlist navigation, and empty state.
+- `PlaylistDetailScreen` & `PlaylistDetailViewModel`:
+  - Playlist hero header with total tracks, total formatted duration, and Play All / Shuffle buttons.
+  - Direct "Add Songs" button launching `TrackPickerBottomSheet`.
+  - TopAppBar options menu: Rename Playlist and Delete Playlist (with confirmation dialog).
+  - Track-level 3-dot menu with "Remove from Playlist" action.
+- `SleepTimerDialog`:
+  - Presets for 15 min, 30 min, 45 min, 60 min, and "End of current track".
+  - Real-time countdown status indicator and instant timer cancellation.
+  - Integrated Sleep Timer moon icon button into `NowPlayingScreen` top bar and wired to `NowPlayingViewModel`.
+- Unit tests: `FavoritesViewModelTest`, `PlaylistDetailViewModelTest`, and updated `NowPlayingViewModelTest`.
+
 ## [0.11.0-home-library-search] - 2026-11-06
 ### Added
 - Phase 3 / Prompt I: Complete Home, Library, Detail screens (Album & Artist), Search screen, and Track action menu.

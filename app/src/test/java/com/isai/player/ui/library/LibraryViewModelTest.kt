@@ -137,3 +137,4 @@ class LibraryViewModelTest {
         coVerify { favoritesRepository.toggleFavorite(track.id) }
     }
 }
+

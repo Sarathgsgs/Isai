@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlaylistAdd
+import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,6 +43,7 @@ fun TrackMenuBottomSheet(
     onPlayNext: () -> Unit,
     onAddToQueue: () -> Unit,
     onToggleFavorite: () -> Unit,
+    onAddToPlaylist: () -> Unit = {},
     onShowInfo: () -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
@@ -92,6 +94,15 @@ fun TrackMenuBottomSheet(
                 onClick = {
                     onAddToQueue()
                     onDismissRequest()
+                }
+            )
+
+            MenuActionRow(
+                icon = Icons.Default.PlaylistPlay,
+                title = stringResource(id = R.string.track_menu_action_add_to_playlist),
+                onClick = {
+                    onDismissRequest()
+                    onAddToPlaylist()
                 }
             )
 

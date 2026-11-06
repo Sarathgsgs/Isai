@@ -138,3 +138,4 @@ class SearchViewModelTest {
         coVerify { favoritesRepository.toggleFavorite(track.id) }
     }
 }
+

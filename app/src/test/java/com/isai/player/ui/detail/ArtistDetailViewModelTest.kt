@@ -110,3 +110,4 @@ class ArtistDetailViewModelTest {
         coVerify { favoritesRepository.toggleFavorite(track.id) }
     }
 }
+

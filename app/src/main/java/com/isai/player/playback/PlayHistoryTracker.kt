@@ -54,3 +54,4 @@ class PlayHistoryTracker @Inject constructor(
 
     fun isLoggedForCurrentTrack(): Boolean = hasLoggedCurrentTrack
 }
+

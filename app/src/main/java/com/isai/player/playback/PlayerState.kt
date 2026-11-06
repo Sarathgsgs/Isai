@@ -43,3 +43,4 @@ data class PlayerState(
     val isBuffering: Boolean
         get() = playbackState == Player.STATE_BUFFERING
 }
+

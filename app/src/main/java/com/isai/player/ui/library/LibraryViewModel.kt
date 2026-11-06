@@ -88,4 +88,20 @@ class LibraryViewModel @Inject constructor(
             favoritesRepository.toggleFavorite(trackId)
         }
     }
+
+    fun createPlaylist(name: String, initialTrackIds: List<Long> = emptyList()) {
+        viewModelScope.launch {
+            val playlistId = playlistRepository.createPlaylist(name)
+            if (initialTrackIds.isNotEmpty()) {
+                playlistRepository.addTracksToPlaylist(playlistId, initialTrackIds)
+            }
+        }
+    }
+
+    fun addTracksToPlaylist(playlistId: Long, trackIds: List<Long>) {
+        viewModelScope.launch {
+            playlistRepository.addTracksToPlaylist(playlistId, trackIds)
+        }
+    }
 }
+

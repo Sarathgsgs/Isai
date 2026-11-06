@@ -64,3 +64,4 @@ class SleepTimerTest {
         assertFalse(sleepTimer.isRunning)
     }
 }
+

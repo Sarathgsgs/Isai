@@ -102,3 +102,4 @@ class HomeViewModelTest {
         verify { playerController.playTracks(any(), 0) }
     }
 }
+

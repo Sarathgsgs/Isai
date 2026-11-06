@@ -134,4 +134,49 @@
     <string name="library_track_count">%1$d tracks</string>
     <string name="library_artist_stats">%1$d albums · %2$d songs</string>
     <string name="library_folder_stats">%1$d tracks · %2$s</string>
+
+    <!-- Favorites Screen -->
+    <string name="favorites_empty_title">No favorites yet</string>
+    <string name="favorites_empty_message">Tap the heart icon on any song to add it to your favorites.</string>
+    <string name="favorites_stats">%1$d tracks • %2$s</string>
+    <string name="favorites_play_all">Play All</string>
+    <string name="favorites_shuffle">Shuffle</string>
+
+    <!-- Playlist Management & Detail -->
+    <string name="playlist_detail_empty_title">Empty Playlist</string>
+    <string name="playlist_detail_empty_message">Add songs to this playlist to get started.</string>
+    <string name="playlist_action_add_songs">Add Songs</string>
+    <string name="playlist_action_rename">Rename Playlist</string>
+    <string name="playlist_action_delete">Delete Playlist</string>
+    <string name="playlist_delete_confirm_title">Delete Playlist?</string>
+    <string name="playlist_delete_confirm_message">Are you sure you want to delete \"%1$s\"? Songs will not be deleted from your device.</string>
+    <string name="playlist_dialog_create_title">New Playlist</string>
+    <string name="playlist_dialog_rename_title">Rename Playlist</string>
+    <string name="playlist_dialog_name_hint">Playlist name</string>
+    <string name="playlist_dialog_create_btn">Create</string>
+    <string name="playlist_dialog_rename_btn">Rename</string>
+    <string name="playlist_dialog_cancel_btn">Cancel</string>
+    <string name="playlist_track_menu_remove">Remove from Playlist</string>
+    <string name="track_menu_action_add_to_playlist">Add to Playlist</string>
+    <string name="add_to_playlist_title">Add to Playlist</string>
+    <string name="add_to_playlist_new">+ New Playlist</string>
+    <string name="add_to_playlist_empty">No playlists created yet. Create one below!</string>
+    <string name="add_to_playlist_added">Added to %1$s</string>
+
+    <!-- Multi-Select Track Picker -->
+    <string name="track_picker_title">Select Songs</string>
+    <string name="track_picker_search_hint">Filter songs…</string>
+    <string name="track_picker_action_add">Add %1$d Songs</string>
+    <string name="track_picker_selected_count">%1$d selected</string>
+
+    <!-- Sleep Timer Dialog -->
+    <string name="sleep_timer_title">Sleep Timer</string>
+    <string name="sleep_timer_preset_15m">15 minutes</string>
+    <string name="sleep_timer_preset_30m">30 minutes</string>
+    <string name="sleep_timer_preset_45m">45 minutes</string>
+    <string name="sleep_timer_preset_60m">60 minutes</string>
+    <string name="sleep_timer_preset_end_of_track">End of current track</string>
+    <string name="sleep_timer_active_countdown">Music will stop in %1$s</string>
+    <string name="sleep_timer_action_cancel">Turn Off Timer</string>
+    <string name="sleep_timer_action_close">Close</string>
 </resources>

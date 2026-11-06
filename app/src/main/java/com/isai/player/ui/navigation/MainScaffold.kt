@@ -147,12 +147,19 @@ fun MainScaffold(
                         },
                         onArtistClick = { artistKey ->
                             navController.navigate(NavRoute.ArtistDetail(artistKey))
+                        },
+                        onPlaylistClick = { playlistId ->
+                            navController.navigate(NavRoute.PlaylistDetail(playlistId))
                         }
                     )
                 }
 
                 composable<NavRoute.Favorites> {
-                    FavoritesScreen()
+                    FavoritesScreen(
+                        onTrackClick = {
+                            navController.navigate(NavRoute.NowPlaying)
+                        }
+                    )
                 }
 
                 composable<NavRoute.Search> {

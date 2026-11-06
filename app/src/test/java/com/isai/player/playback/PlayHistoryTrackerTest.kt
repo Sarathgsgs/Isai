@@ -110,3 +110,4 @@ class PlayHistoryTrackerTest {
         assertFalse(tracker.isLoggedForCurrentTrack())
     }
 }
+

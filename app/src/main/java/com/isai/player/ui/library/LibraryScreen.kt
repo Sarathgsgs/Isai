@@ -20,17 +20,22 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
@@ -64,6 +69,8 @@ import com.isai.player.data.repository.ThemeMode
 import com.isai.player.ui.components.AlbumCard
 import com.isai.player.ui.components.EmptyState
 import com.isai.player.ui.components.TrackRow
+import com.isai.player.ui.playlists.AddToPlaylistDialog
+import com.isai.player.ui.playlists.CreatePlaylistDialog
 import com.isai.player.ui.theme.IsaiTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,6 +79,7 @@ fun LibraryScreen(
     onTrackClick: (String) -> Unit,
     onAlbumClick: (String) -> Unit = {},
     onArtistClick: (String) -> Unit = {},
+    onPlaylistClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
@@ -86,6 +94,9 @@ fun LibraryScreen(
 
     var activeMenuTrack by remember { mutableStateOf<Track?>(null) }
     var activeInfoTrack by remember { mutableStateOf<Track?>(null) }
+    var trackToAddToPlaylist by remember { mutableStateOf<Track?>(null) }
+    var showCreatePlaylistDialog by remember { mutableStateOf(false) }
+
     val menuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LibraryContent(
@@ -104,12 +115,15 @@ fun LibraryScreen(
         },
         onAlbumClick = onAlbumClick,
         onArtistClick = onArtistClick,
+        onPlaylistClick = onPlaylistClick,
+        onCreatePlaylistClick = { showCreatePlaylistDialog = true },
         onTrackMoreClick = { track ->
             activeMenuTrack = track
         },
         modifier = modifier
     )
 
+    // 3-dot Context Menu
     activeMenuTrack?.let { track ->
         TrackMenuBottomSheet(
             sheetState = menuSheetState,
@@ -118,11 +132,40 @@ fun LibraryScreen(
             onPlayNext = { viewModel.playNext(track) },
             onAddToQueue = { viewModel.addToQueue(track) },
             onToggleFavorite = { viewModel.toggleFavorite(track.id) },
+            onAddToPlaylist = { trackToAddToPlaylist = track },
             onShowInfo = { activeInfoTrack = track },
             onDismissRequest = { activeMenuTrack = null }
         )
     }
 
+    // Add to Playlist Dialog
+    trackToAddToPlaylist?.let { track ->
+        AddToPlaylistDialog(
+            playlists = playlists,
+            onSelectPlaylist = { playlistId ->
+                viewModel.addTracksToPlaylist(playlistId, listOf(track.id))
+                trackToAddToPlaylist = null
+            },
+            onCreateNewPlaylist = { name ->
+                viewModel.createPlaylist(name, listOf(track.id))
+                trackToAddToPlaylist = null
+            },
+            onDismissRequest = { trackToAddToPlaylist = null }
+        )
+    }
+
+    // Create New Playlist Dialog from Library Playlists tab
+    if (showCreatePlaylistDialog) {
+        CreatePlaylistDialog(
+            onConfirm = { name ->
+                viewModel.createPlaylist(name)
+                showCreatePlaylistDialog = false
+            },
+            onDismissRequest = { showCreatePlaylistDialog = false }
+        )
+    }
+
+    // Song Info Dialog
     activeInfoTrack?.let { track ->
         TrackInfoDialog(
             track = track,
@@ -145,6 +188,8 @@ fun LibraryContent(
     onTrackClick: (Track) -> Unit,
     onAlbumClick: (String) -> Unit,
     onArtistClick: (String) -> Unit,
+    onPlaylistClick: (Long) -> Unit,
+    onCreatePlaylistClick: () -> Unit,
     onTrackMoreClick: (Track) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -196,7 +241,11 @@ fun LibraryContent(
                 artists = artists,
                 onArtistClick = onArtistClick
             )
-            3 -> PlaylistsTab(playlists = playlists)
+            3 -> PlaylistsTab(
+                playlists = playlists,
+                onPlaylistClick = onPlaylistClick,
+                onCreatePlaylistClick = onCreatePlaylistClick
+            )
             4 -> FoldersTab(folders = folders)
         }
     }
@@ -435,19 +484,51 @@ private fun ArtistsTab(
 }
 
 @Composable
-private fun PlaylistsTab(playlists: List<Playlist>) {
-    if (playlists.isEmpty()) {
-        EmptyState(
-            icon = Icons.Default.PlaylistPlay,
-            title = stringResource(id = R.string.library_empty_playlists_title),
-            message = stringResource(id = R.string.library_empty_playlists_message)
-        )
-    } else {
-        LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 88.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
+private fun PlaylistsTab(
+    playlists: List<Playlist>,
+    onPlaylistClick: (Long) -> Unit,
+    onCreatePlaylistClick: () -> Unit
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 88.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // "+ Create Playlist" Action Row
+        item {
+            OutlinedButton(
+                onClick = onCreatePlaylistClick,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(46.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = IsaiTheme.colors.accent,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(id = R.string.playlist_dialog_create_title),
+                    color = IsaiTheme.colors.accent,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
+        if (playlists.isEmpty()) {
+            item {
+                EmptyState(
+                    icon = Icons.Default.PlaylistPlay,
+                    title = stringResource(id = R.string.library_empty_playlists_title),
+                    message = stringResource(id = R.string.library_empty_playlists_message),
+                    modifier = Modifier.padding(top = 24.dp)
+                )
+            }
+        } else {
             items(
                 items = playlists,
                 key = { it.id }
@@ -455,7 +536,7 @@ private fun PlaylistsTab(playlists: List<Playlist>) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {}
+                        .clickable { onPlaylistClick(playlist.id) }
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -574,6 +655,8 @@ private fun LibraryScreenDarkPreview() {
                 onTrackClick = {},
                 onAlbumClick = {},
                 onArtistClick = {},
+                onPlaylistClick = {},
+                onCreatePlaylistClick = {},
                 onTrackMoreClick = {}
             )
         }

@@ -130,4 +130,16 @@ class NowPlayingViewModelTest {
 
         coVerify { favoritesRepository.toggleFavorite(42L) }
     }
+
+    @Test
+    fun sleepTimerDelegatesToPlayerController() = runTest {
+        val viewModel = NowPlayingViewModel(playerController, favoritesRepository, settingsRepository)
+
+        viewModel.startSleepTimer(30 * 60 * 1000L, stopAtEndOfTrack = false)
+        verify { playerController.startSleepTimer(30 * 60 * 1000L, false) }
+
+        viewModel.cancelSleepTimer()
+        verify { playerController.cancelSleepTimer() }
+    }
 }
+

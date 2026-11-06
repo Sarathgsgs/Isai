@@ -52,6 +52,9 @@ class NowPlayingViewModel @Inject constructor(
     val liftBehavior: StateFlow<LiftBehavior> = settingsRepository.liftBehavior
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LiftBehavior.PAUSE)
 
+    val sleepTimerRemainingMs: StateFlow<Long> = playerController.sleepTimer.remainingMs
+    val isStopAtEndOfTrack: StateFlow<Boolean> = playerController.sleepTimer.isStopAtEndOfTrack
+
     private val _scrubPreviewProgress = MutableStateFlow<Float?>(null)
     val scrubPreviewProgress: StateFlow<Float?> = _scrubPreviewProgress.asStateFlow()
 
@@ -128,6 +131,14 @@ class NowPlayingViewModel @Inject constructor(
         playerController.clearQueue()
     }
 
+    fun startSleepTimer(durationMs: Long, stopAtEndOfTrack: Boolean) {
+        playerController.startSleepTimer(durationMs, stopAtEndOfTrack)
+    }
+
+    fun cancelSleepTimer() {
+        playerController.cancelSleepTimer()
+    }
+
     private fun Track.toStageTrack(): StageTrack = StageTrack(
         id = id.toString(),
         title = title,
@@ -137,3 +148,4 @@ class NowPlayingViewModel @Inject constructor(
         art = artPath
     )
 }
+

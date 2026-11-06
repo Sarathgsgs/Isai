@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -66,14 +67,18 @@ fun NowPlayingScreen(
     val liftBehavior by viewModel.liftBehavior.collectAsStateWithLifecycle()
     val scrubPreviewProgress by viewModel.scrubPreviewProgress.collectAsStateWithLifecycle()
     val lastSwipeDirection by viewModel.lastSwipeDirection.collectAsStateWithLifecycle()
+    val sleepTimerRemainingMs by viewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
+    val isStopAtEndOfTrack by viewModel.isStopAtEndOfTrack.collectAsStateWithLifecycle()
 
     var showQueueSheet by remember { mutableStateOf(false) }
+    var showSleepTimerDialog by remember { mutableStateOf(false) }
     val queueSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     NowPlayingContent(
         playerState = playerState,
         stageTrack = stageTrack,
         isFavorite = isFavorite,
+        isSleepTimerActive = sleepTimerRemainingMs > 0L || isStopAtEndOfTrack,
         liftBehavior = liftBehavior,
         scrubPreviewProgress = scrubPreviewProgress,
         lastSwipeDirection = lastSwipeDirection,
@@ -89,8 +94,21 @@ fun NowPlayingScreen(
         onToggleShuffle = { viewModel.toggleShuffle() },
         onCycleRepeat = { viewModel.cycleRepeatMode() },
         onOpenQueueClick = { showQueueSheet = true },
+        onOpenSleepTimerClick = { showSleepTimerDialog = true },
         modifier = modifier
     )
+
+    if (showSleepTimerDialog) {
+        SleepTimerDialog(
+            remainingMs = sleepTimerRemainingMs,
+            isStopAtEndOfTrack = isStopAtEndOfTrack,
+            onStartTimer = { durationMs, stopAtEnd ->
+                viewModel.startSleepTimer(durationMs, stopAtEnd)
+            },
+            onCancelTimer = { viewModel.cancelSleepTimer() },
+            onDismissRequest = { showSleepTimerDialog = false }
+        )
+    }
 
     if (showQueueSheet) {
         QueueBottomSheet(
@@ -120,6 +138,7 @@ fun NowPlayingContent(
     playerState: PlayerState,
     stageTrack: StageTrack?,
     isFavorite: Boolean,
+    isSleepTimerActive: Boolean = false,
     liftBehavior: LiftBehavior,
     scrubPreviewProgress: Float?,
     lastSwipeDirection: SwipeDirection,
@@ -135,6 +154,7 @@ fun NowPlayingContent(
     onToggleShuffle: () -> Unit,
     onCycleRepeat: () -> Unit,
     onOpenQueueClick: () -> Unit,
+    onOpenSleepTimerClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val durationMs = playerState.durationMs
@@ -166,17 +186,26 @@ fun NowPlayingContent(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onOpenSleepTimerClick) {
+                        Icon(
+                            imageVector = Icons.Default.Bedtime,
+                            contentDescription = stringResource(id = R.string.sleep_timer_title),
+                            tint = if (isSleepTimerActive) IsaiTheme.colors.accent else IsaiTheme.colors.onBackground
+                        )
+                    }
                     IconButton(onClick = onToggleFavorite) {
                         Icon(
                             imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Toggle Favorite",
+                            contentDescription = stringResource(
+                                id = if (isFavorite) R.string.track_menu_action_remove_favorite else R.string.track_menu_action_add_favorite
+                            ),
                             tint = if (isFavorite) IsaiTheme.colors.accent else IsaiTheme.colors.onBackground
                         )
                     }
                     IconButton(onClick = onOpenQueueClick) {
                         Icon(
                             imageVector = Icons.Default.QueueMusic,
-                            contentDescription = "Queue",
+                            contentDescription = stringResource(id = R.string.nav_tab_library),
                             tint = IsaiTheme.colors.onBackground
                         )
                     }

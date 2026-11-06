@@ -59,3 +59,4 @@ class PlayerStateTest {
         assertTrue(withTrackState.hasTrack)
     }
 }
+

@@ -113,3 +113,4 @@ class AlbumDetailViewModelTest {
         coVerify { favoritesRepository.toggleFavorite(track.id) }
     }
 }
+
