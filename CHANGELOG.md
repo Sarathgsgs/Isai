@@ -5,6 +5,35 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-06
+### Added
+- **Add-on Round 2 Major Release**: Delivers a dynamic Equalizer & Audio Effects Engine, complete Android Auto & Bluetooth car dashboard support via MediaLibraryService, and robust M3U/M3U8 playlist import/export.
+- **Equalizer & Audio Effects (Prompt S)**:
+  - On-device hardware effects attached to ExoPlayer's `audioSessionId` (`Equalizer`, `BassBoost`, `Virtualizer`, `LoudnessEnhancer`).
+  - Probes device frequency bands and level ranges dynamically without hardcoding.
+  - Log-frequency preset resampling across 14 genre/acoustic presets.
+  - Interactive Catmull-Rom spline `EqCurveView` Canvas with draggable band nodes and $0\text{ dB}$ haptic ticks.
+  - Automatic digital clipping compensation math to prevent inter-sample distortion.
+  - DataStore custom preset creation and system equalizer panel intent launcher.
+- **Android Auto & Automotive Media (Prompt T)**:
+  - Upgraded `PlaybackService` to `MediaLibraryService` (`MediaLibrarySession.Callback`).
+  - Structured 6-category browse tree (Recently Played, Favorites, Playlists, Albums, Artists, All Songs with "Shuffle All").
+  - Secure `CarArtworkProvider` content provider serving downscaled 512px JPEG artwork with strict path-traversal guards.
+  - Package authentication protecting queue controls (`PackageValidator`).
+  - Natural Google Assistant voice search query resolution.
+  - Dedicated Desktop Head Unit (DHU) guide in `docs/android-auto.md`.
+- **M3U Playlist Import & Export (Prompt U)**:
+  - Room database schema v4 migration (`relative_path_norm` indexed column and `MIGRATION_3_4`).
+  - Comprehensive `PathNormalizer` (Windows drive strip, URL decoding, `/` normalization).
+  - High-performance M3U/M3U8 parser supporting `#EXTINF` and `#PLAYLIST` tags.
+  - 4-stage track matcher (exact relative path $\to$ suffix $\to$ filename + duration $\to$ tag match).
+  - Interactive import preview bottom sheet with conflict resolution.
+  - Export writer for playlists, favorites, and queues.
+- **Round-2 Quality Assurance Suite (Prompt V)**:
+  - `RoomMigrationTest`: Validates SQL DDL migration chain through `MIGRATION_3_4`.
+  - `AddOnRound2ContractTest`: Validates strict zero-network contract (`0` internet permissions), automotive declarations, and audio DSP headroom calculations.
+  - Real-world fixture compatibility verified against **foobar2000**, **VLC**, **MusicBee**, and **Poweramp**.
+
 ## [0.21.0-m3u-playlists] - 2026-11-06
 ### Added
 - Add-on Round 2 / Prompt U: Comprehensive M3U/M3U8 playlist import and export engine with Room v4 migration, path normalization, 4-stage track matching, and interactive preview UI.

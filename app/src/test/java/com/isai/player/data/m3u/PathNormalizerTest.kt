@@ -49,3 +49,4 @@ class PathNormalizerTest {
         assertEquals("Rock/Pink Floyd/01 Speak to Me.flac", trailing3)
     }
 }
+

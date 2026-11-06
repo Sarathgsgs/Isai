@@ -35,5 +35,19 @@ class RoomMigrationTest {
             db.execSQL(match { it.contains("CREATE TABLE IF NOT EXISTS `lyrics`") && it.contains("`offset_ms` INTEGER NOT NULL") })
         }
     }
+
+    @Test
+    fun migration_3_4_hasCorrectVersionsAndExecutesExpectedDDL() {
+        val migration = IsaiDatabase.MIGRATION_3_4
+        assertEquals(3, migration.startVersion)
+        assertEquals(4, migration.endVersion)
+
+        val db = mockk<SupportSQLiteDatabase>(relaxed = true)
+        migration.migrate(db)
+
+        verify(exactly = 1) {
+            db.execSQL(match { it.contains("CREATE INDEX IF NOT EXISTS `index_tracks_relative_path_norm`") })
+        }
+    }
 }
 

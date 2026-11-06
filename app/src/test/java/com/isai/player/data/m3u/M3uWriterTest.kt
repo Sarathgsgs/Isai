@@ -59,3 +59,4 @@ class M3uWriterTest {
         assertTrue(written.contains("Track.mp3"))
     }
 }
+

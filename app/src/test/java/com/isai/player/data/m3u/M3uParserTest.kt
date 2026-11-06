@@ -79,3 +79,4 @@ class M3uParserTest {
         assertEquals("Song.mp3", playlist.entries[0].normalizedPath)
     }
 }
+

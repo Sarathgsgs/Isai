@@ -129,3 +129,4 @@ object M3uParser {
         return Pair(bytes, StandardCharsets.UTF_8)
     }
 }
+

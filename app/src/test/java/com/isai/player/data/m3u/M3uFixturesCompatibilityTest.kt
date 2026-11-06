@@ -121,3 +121,4 @@ class M3uFixturesCompatibilityTest {
         assertEquals(1, matched.matchedCount)
     }
 }
+
