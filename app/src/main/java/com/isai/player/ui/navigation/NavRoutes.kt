@@ -40,4 +40,8 @@ sealed interface NavRoute {
 
     @Serializable
     data object LabsDashboard : NavRoute
+
+    @Serializable
+    data object TonearmLab : NavRoute
 }
+

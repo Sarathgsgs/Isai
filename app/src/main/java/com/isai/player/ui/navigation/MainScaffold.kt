@@ -187,7 +187,18 @@ fun MainScaffold(
                 composable<NavRoute.LabsDashboard> {
                     LabsDashboardScreen(
                         onBackClick = { navController.popBackStack() },
-                        onNavigateToLab = { /* Lab destinations will be registered in Prompts A-D */ }
+                        onNavigateToLab = { labRoute ->
+                            when (labRoute) {
+                                is LabsRoute.TonearmLab -> navController.navigate(NavRoute.TonearmLab)
+                                else -> {}
+                            }
+                        }
+                    )
+                }
+
+                composable<NavRoute.TonearmLab> {
+                    com.isai.player.ui.components.TonearmLabScreen(
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
 
@@ -226,3 +237,4 @@ fun MainScaffold(
         }
     }
 }
+

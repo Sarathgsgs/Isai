@@ -54,3 +54,4 @@ private fun FavoritesScreenLightPreview() {
         }
     }
 }
+

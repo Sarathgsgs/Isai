@@ -95,3 +95,4 @@ object IsaiTheme {
         @ReadOnlyComposable
         get() = LocalIsaiColors.current
 }
+

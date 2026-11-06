@@ -26,3 +26,4 @@ class SettingsRepositoryStub @Inject constructor() {
         _themeMode.value = mode
     }
 }
+

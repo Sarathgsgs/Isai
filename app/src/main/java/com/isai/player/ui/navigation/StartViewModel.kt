@@ -13,3 +13,4 @@ class StartViewModel @Inject constructor() : ViewModel() {
     private val _startDestination = MutableStateFlow<NavRoute>(NavRoute.Main)
     val startDestination: StateFlow<NavRoute> = _startDestination.asStateFlow()
 }
+

@@ -68,3 +68,4 @@ val LocalIsaiColors = staticCompositionLocalOf {
         isDark = true
     )
 }
+
