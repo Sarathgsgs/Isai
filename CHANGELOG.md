@@ -5,6 +5,30 @@ All notable changes to **Isai** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-06
+### Added
+- **Add-on Round 1 Major Release**: Delivers audio waveform extraction with interactive seekbar, complete offline synced lyrics, and responsive Jetpack Glance home-screen widget.
+- **Waveform Seekbar (Prompt O)**:
+  - On-device PCM decoding and transient peak extraction via `MediaCodec` and `MediaExtractor` on bounded dispatcher.
+  - Normalization with 95th percentile clipping and $\gamma = 0.7$ curve.
+  - Room database schema v2 (`waveforms` entity and `MIGRATION_1_2`) with foreign key cascade.
+  - Interactive Canvas `WaveformSeekBar` with bars, line, and classic styles.
+  - Scrub arbitration (`ScrubOwner.ARM` vs `ScrubOwner.BAR`) preventing touch collisions with the spinning vinyl tonearm.
+- **Offline Synced Lyrics (Prompt P)**:
+  - Strict priority resolution: User Imported > Sidecar (`.lrc`/`.txt`) > Embedded tags.
+  - Zero-dependency ID3v2 `USLT`/`SYLT` and Vorbis `LYRICS` stream parser in pure Kotlin.
+  - Standard and 3-digit millisecond LRC parser with $O(\log N)$ binary search active line resolution.
+  - Room database schema v3 (`lyrics` entity and `MIGRATION_2_3`).
+  - Centered auto-scrolling `LyricsView`, 4-second user-scroll pause timer, tap-to-seek, and timing offset calibration modal sheet ($\pm 0.5\text{s}$, $\pm 0.1\text{s}$).
+- **Jetpack Glance Home-screen Widget (Prompt Q)**:
+  - Responsive layouts: Small (2x2), Medium (4x1 / 4x2), and Large (4x3+).
+  - High-resolution photorealistic turntable renderer with tonearm posture sync (playing vs paused) and in-memory LRU caching.
+  - Interactive Glance action callbacks for playback control and favorite toggling.
+  - Throttled updater (max 1 IPC per 10 seconds for progress) initiated in `IsaiApp.onCreate()`.
+- **Quality Assurance & Verification Suite (Prompt R)**:
+  - `RoomMigrationTest`: Validates SQL DDL integrity for `MIGRATION_1_2` and `MIGRATION_2_3`.
+  - `AddOnRound1ContractTest`: Enforces strict zero-network contract (`0` internet permissions), deterministic waveform fallback, lyrics parsing/priority, and widget IPC throttling.
+
 ## [0.18.0-glance-widget] - 2026-11-06
 ### Added
 - Add-on Round 1 / Prompt Q: Jetpack Glance Home-screen Widget with responsive size layouts, pre-rendered turntable bitmap, interactive action callbacks, and throttled updater.

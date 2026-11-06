@@ -31,3 +31,4 @@ interface LyricsDao {
     @Query("SELECT COUNT(*) FROM lyrics")
     suspend fun getLyricsCount(): Int
 }
+

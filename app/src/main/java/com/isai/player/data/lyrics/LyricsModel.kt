@@ -47,3 +47,4 @@ data class ParsedLyrics(
     val artist: String? = null,
     val album: String? = null
 )
+

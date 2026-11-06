@@ -100,3 +100,4 @@ class LyricsRepositoryTest {
         coVerify(exactly = 1) { lyricsDao.updateOffset(trackId, 500, any()) }
     }
 }
+

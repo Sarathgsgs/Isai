@@ -25,3 +25,4 @@ interface LyricsRepository {
 
     suspend fun getLyricsCount(): Int
 }
+

@@ -24,3 +24,4 @@ class WidgetArtRendererTest {
         assertNotEquals(track1Key, track2Key)
     }
 }
+

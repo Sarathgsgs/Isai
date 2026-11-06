@@ -131,3 +131,4 @@ class LrcParserTest {
         assertEquals(-1, LrcParser.lineIndexAt(emptyList(), 5000L))
     }
 }
+

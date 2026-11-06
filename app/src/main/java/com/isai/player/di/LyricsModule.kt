@@ -18,3 +18,4 @@ abstract class LyricsModule {
         impl: LyricsRepositoryImpl
     ): LyricsRepository
 }
+

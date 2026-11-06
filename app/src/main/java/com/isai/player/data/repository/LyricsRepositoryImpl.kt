@@ -108,3 +108,4 @@ class LyricsRepositoryImpl @Inject constructor(
         lyricsDao.getLyricsCount()
     }
 }
+

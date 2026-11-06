@@ -33,3 +33,4 @@ data class LyricsEntity(
     @ColumnInfo(name = "last_modified")
     val lastModified: Long = System.currentTimeMillis()
 )
+

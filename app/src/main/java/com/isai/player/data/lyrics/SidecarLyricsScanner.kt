@@ -73,3 +73,4 @@ object SidecarLyricsScanner {
         return null
     }
 }
+

@@ -71,3 +71,4 @@ class WidgetUpdaterTest {
         assertFalse(shouldUpdate)
     }
 }
+

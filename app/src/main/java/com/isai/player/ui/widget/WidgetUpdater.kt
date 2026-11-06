@@ -78,3 +78,4 @@ class WidgetUpdater @Inject constructor(
         return (now - lastUpdateTime) >= 10_000L
     }
 }
+

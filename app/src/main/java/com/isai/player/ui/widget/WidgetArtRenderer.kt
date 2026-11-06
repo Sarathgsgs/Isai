@@ -153,3 +153,4 @@ object WidgetArtRenderer {
         memoryCache.evictAll()
     }
 }
+

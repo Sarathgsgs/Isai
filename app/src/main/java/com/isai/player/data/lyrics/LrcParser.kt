@@ -186,3 +186,4 @@ object LrcParser {
         return bestIndex
     }
 }
+
