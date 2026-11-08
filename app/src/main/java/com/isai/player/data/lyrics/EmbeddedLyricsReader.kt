@@ -1,9 +1,7 @@
 package com.isai.player.data.lyrics
 
 import android.content.Context
-import android.media.MediaMetadataRetriever
 import android.net.Uri
-import android.os.Build
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -19,23 +17,6 @@ import java.nio.charset.StandardCharsets
 object EmbeddedLyricsReader {
 
     fun readEmbeddedLyrics(context: Context, trackUri: Uri): String? {
-        // 1. Try MediaMetadataRetriever if supported (API 30+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val retriever = MediaMetadataRetriever()
-            try {
-                retriever.setDataSource(context, trackUri)
-                val lyrics = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LYRICS)
-                if (!lyrics.isNullOrBlank()) {
-                    return lyrics
-                }
-            } catch (_: Exception) {
-                // Fall back to direct stream parser
-            } finally {
-                runCatching { retriever.release() }
-            }
-        }
-
-        // 2. Direct binary stream parsing
         return try {
             context.contentResolver.openInputStream(trackUri)?.use { input ->
                 readFromStream(input)

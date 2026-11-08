@@ -3,8 +3,6 @@ package com.isai.player.di
 import com.isai.player.data.repository.EqualizerRepository
 import com.isai.player.data.repository.EqualizerRepositoryImpl
 import com.isai.player.data.repository.FavoritesRepository
-import com.isai.player.data.repository.EqualizerRepository
-import com.isai.player.data.repository.EqualizerRepositoryImpl
 import com.isai.player.data.repository.FavoritesRepositoryImpl
 import com.isai.player.data.repository.HistoryRepository
 import com.isai.player.data.repository.HistoryRepositoryImpl
