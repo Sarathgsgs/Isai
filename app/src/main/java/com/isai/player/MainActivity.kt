@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
                 if (!hasPermission && !selectedFolderUri.isNullOrBlank()) {
                     // Permission was revoked externally; reset stored folder
                     scope.launch {
-                        settingsRepository.setSelectedFolder(null, null)
+                        settingsRepository.clearSelectedFolder()
                     }
                 }
 
