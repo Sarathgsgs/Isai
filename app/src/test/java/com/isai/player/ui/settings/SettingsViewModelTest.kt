@@ -52,6 +52,9 @@ class SettingsViewModelTest {
     private val lyricsCountFlow = MutableStateFlow(0)
     private val folderUriFlow = MutableStateFlow<String?>("content://tree/music")
     private val folderNameFlow = MutableStateFlow<String?>("Music")
+    private val folderEntriesFlow = MutableStateFlow(
+        listOf(com.isai.player.data.repository.FolderEntry("content://tree/music", "Music", false))
+    )
     private val scanStateFlow = MutableStateFlow<ScanState>(ScanState.Idle)
     private val timerRemainingFlow = MutableStateFlow(0L)
     private val stopAtEndFlow = MutableStateFlow(false)
@@ -77,6 +80,7 @@ class SettingsViewModelTest {
         every { lyricsRepository.observeLyricsCount() } returns lyricsCountFlow
         every { settingsRepository.selectedFolderUri } returns folderUriFlow
         every { settingsRepository.selectedFolderName } returns folderNameFlow
+        every { settingsRepository.folderEntries } returns folderEntriesFlow
         every { libraryScanner.scanState } returns scanStateFlow
         every { playerController.sleepTimer.remainingMs } returns timerRemainingFlow
         every { playerController.sleepTimer.isStopAtEndOfTrack } returns stopAtEndFlow

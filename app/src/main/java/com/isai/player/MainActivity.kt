@@ -76,6 +76,14 @@ class MainActivity : ComponentActivity() {
 
     private fun isFolderPermissionGranted(uriString: String?): Boolean {
         if (uriString.isNullOrBlank()) return false
+        if (uriString == com.isai.player.data.repository.FolderEntry.DOWNLOADS_URI || uriString.startsWith("mediastore:")) {
+            val perm = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                android.Manifest.permission.READ_MEDIA_AUDIO
+            } else {
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            }
+            return androidx.core.content.ContextCompat.checkSelfPermission(this, perm) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
         return try {
             val targetUri = android.net.Uri.parse(uriString)
             contentResolver.persistedUriPermissions.any { perm ->

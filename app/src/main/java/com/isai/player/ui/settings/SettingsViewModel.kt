@@ -3,6 +3,7 @@ package com.isai.player.ui.settings
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.isai.player.data.repository.FolderEntry
 import com.isai.player.data.repository.LibraryRepository
 import com.isai.player.data.repository.LiftBehavior
 import com.isai.player.data.repository.LyricsRepository
@@ -33,6 +34,8 @@ data class SettingsUiState(
     val keepScreenOnWhileLyrics: Boolean = false,
     val selectedFolderUri: String? = null,
     val selectedFolderName: String? = null,
+    val folderEntries: List<FolderEntry> = emptyList(),
+    val isDownloadsIncluded: Boolean = false,
     val isScanning: Boolean = false,
     val scanStatusMessage: String? = null,
     val purgedCount: Int? = null,
@@ -68,6 +71,7 @@ class SettingsViewModel @Inject constructor(
         lyricsRepository.observeLyricsCount(),
         settingsRepository.selectedFolderUri,
         settingsRepository.selectedFolderName,
+        settingsRepository.folderEntries,
         libraryScanner.scanState,
         scanMessageFlow
     ) { args: Array<Any?> ->
@@ -82,8 +86,10 @@ class SettingsViewModel @Inject constructor(
         val lyricsCount = args[8] as Int
         val folderUri = args[9] as String?
         val folderName = args[10] as String?
-        val scanState = args[11] as ScanState
-        val scanMsg = args[12] as String?
+        @Suppress("UNCHECKED_CAST")
+        val entries = args[11] as List<FolderEntry>
+        val scanState = args[12] as ScanState
+        val scanMsg = args[13] as String?
 
         val isScanning = scanState is ScanState.Scanning
         val statusMsg = when (scanState) {
@@ -91,6 +97,8 @@ class SettingsViewModel @Inject constructor(
             is ScanState.Error -> "Scan error: ${scanState.message}"
             else -> scanMsg
         }
+
+        val hasDownloads = entries.any { it.isMediaStore || it.uriString == FolderEntry.DOWNLOADS_URI }
 
         SettingsUiState(
             themeMode = theme,
@@ -101,6 +109,8 @@ class SettingsViewModel @Inject constructor(
             keepScreenOnWhileLyrics = keepScreenOn,
             selectedFolderUri = folderUri,
             selectedFolderName = folderName,
+            folderEntries = entries,
+            isDownloadsIncluded = hasDownloads,
             isScanning = isScanning,
             scanStatusMessage = statusMsg,
             purgedCount = purgedCountFlow.value,
@@ -165,17 +175,41 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun rescanLibrary() {
-        val uriString = uiState.value.selectedFolderUri ?: return
-        val uri = Uri.parse(uriString)
         viewModelScope.launch {
-            libraryScanner.startScan(uri)
+            libraryScanner.scanAllFolders()
         }
     }
 
     fun updateFolderAndRescan(uri: Uri, folderName: String) {
         viewModelScope.launch {
             settingsRepository.setSelectedFolder(uri.toString(), folderName)
-            libraryScanner.startScan(uri)
+            libraryScanner.scanAllFolders()
+        }
+    }
+
+    fun addFolder(uri: Uri, folderName: String) {
+        viewModelScope.launch {
+            val entry = FolderEntry(
+                uriString = uri.toString(),
+                displayName = folderName,
+                isMediaStore = false
+            )
+            settingsRepository.addFolder(entry)
+            libraryScanner.scanAllFolders()
+        }
+    }
+
+    fun removeFolder(uriString: String) {
+        viewModelScope.launch {
+            settingsRepository.removeFolder(uriString)
+            libraryScanner.scanAllFolders()
+        }
+    }
+
+    fun toggleDownloadsFolder(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.toggleDownloadsFolder(enabled)
+            libraryScanner.scanAllFolders()
         }
     }
 

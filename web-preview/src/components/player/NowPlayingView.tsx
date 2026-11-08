@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Track, RepeatMode, PlayerSettings } from '../../types';
 import { TurntableStage } from '../turntable/TurntableStage';
 import { LyricsView } from './LyricsView';
+import { WaveformSeekBar } from './WaveformSeekBar';
 import {
   ChevronDown,
   Heart,
@@ -91,6 +92,8 @@ export const NowPlayingView: React.FC<NowPlayingViewProps> = ({
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(1.0);
+  const [seekDragTime, setSeekDragTime] = useState<number | null>(null);
+  const isDraggingSeekRef = useRef<boolean>(false);
 
   if (!currentTrack) return null;
 
@@ -192,6 +195,9 @@ export const NowPlayingView: React.FC<NowPlayingViewProps> = ({
               currentTrack={currentTrack}
               isPlaying={isPlaying}
               progress={progress}
+              currentTime={currentTime}
+              duration={safeDuration}
+              onSeek={onSeek}
               onSeekProgress={onSeekProgress}
               onTogglePlay={onTogglePlay}
               rpm={settings.rpm}
@@ -264,25 +270,55 @@ export const NowPlayingView: React.FC<NowPlayingViewProps> = ({
           </button>
         </div>
 
-        {/* Clean Samsung One UI Style Seekbar */}
-        <div className="flex flex-col gap-1.5 pt-1">
-          <div className="relative w-full flex items-center group cursor-pointer">
-            <input
-              type="range"
-              min="0"
-              max={safeDuration}
-              step="0.1"
-              value={currentTime}
-              onChange={(e) => onSeek(parseFloat(e.target.value))}
-              className="w-full h-1 bg-white/20 rounded-full appearance-none accent-white cursor-pointer group-hover:h-1.5 transition-all"
+        {/* Seekbar: WaveformSeekBar or Samsung One UI Clean Track with Drag Decoupling */}
+        {settings.seekBarStyle && settings.seekBarStyle !== 'classic' ? (
+          <div className="pt-1">
+            <WaveformSeekBar
+              currentTime={currentTime}
+              duration={safeDuration}
+              onSeek={onSeek}
+              waveform={currentTrack.waveform}
+              style={settings.seekBarStyle}
             />
           </div>
+        ) : (
+          <div className="flex flex-col gap-1.5 pt-1 touch-none">
+            <div className="relative w-full flex items-center group cursor-pointer touch-none">
+              <input
+                type="range"
+                min="0"
+                max={safeDuration}
+                step="0.1"
+                value={seekDragTime !== null ? seekDragTime : currentTime}
+                onPointerDown={() => {
+                  isDraggingSeekRef.current = true;
+                  setSeekDragTime(currentTime);
+                }}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setSeekDragTime(val);
+                  onSeek(val);
+                }}
+                onPointerUp={(e) => {
+                  isDraggingSeekRef.current = false;
+                  const val = parseFloat((e.target as HTMLInputElement).value);
+                  onSeek(val);
+                  setSeekDragTime(null);
+                }}
+                onPointerCancel={() => {
+                  isDraggingSeekRef.current = false;
+                  setSeekDragTime(null);
+                }}
+                className="w-full h-1 bg-white/20 rounded-full appearance-none accent-amber-500 cursor-pointer group-hover:h-1.5 transition-all touch-none"
+              />
+            </div>
 
-          <div className="flex items-center justify-between text-xs text-neutral-400 font-mono px-0.5">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(safeDuration)}</span>
+            <div className="flex items-center justify-between text-xs text-neutral-400 font-mono px-0.5">
+              <span>{formatTime(seekDragTime !== null ? seekDragTime : currentTime)}</span>
+              <span>{formatTime(safeDuration)}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Primary Playback Controls: Shuffle, Previous, Hero Play/Pause, Next, Repeat */}
         <div className="flex items-center justify-between px-1 pt-1">

@@ -3,6 +3,7 @@ package com.isai.player.data.scanner
 import android.net.Uri
 import com.isai.player.data.db.dao.TrackDao
 import com.isai.player.data.db.entity.TrackEntity
+import com.isai.player.data.repository.FolderEntry
 import com.isai.player.data.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +33,37 @@ class LibraryScanner @Inject constructor(
     private val scanMutex = Mutex()
     private val workerDispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(4)
 
+    /**
+     * Scans all configured folder entries (both SAF trees and MediaStore downloads),
+     * merging newly discovered tracks and updating database state.
+     */
+    suspend fun scanAllFolders(): ScanState = scanMutex.withLock {
+        val entries = settingsRepository.folderEntries.first()
+        if (entries.isEmpty()) {
+            val legacyUri = settingsRepository.selectedFolderUri.first()
+            if (legacyUri.isNullOrBlank()) {
+                val error = ScanState.Error("No music folders selected")
+                _scanState.value = error
+                return error
+            }
+        }
+
+        return performScanInternal(entries)
+    }
+
     suspend fun startScan(treeUri: Uri): ScanState = scanMutex.withLock {
+        val isDownloads = treeUri.toString() == FolderEntry.DOWNLOADS_URI
+        val entries = listOf(
+            FolderEntry(
+                uriString = treeUri.toString(),
+                displayName = if (isDownloads) "Downloads" else "Selected Folder",
+                isMediaStore = isDownloads
+            )
+        )
+        return performScanInternal(entries)
+    }
+
+    private suspend fun performScanInternal(entries: List<FolderEntry>): ScanState {
         _scanState.value = ScanState.Scanning(scannedCount = 0, totalDiscovered = 0, currentFileName = "")
 
         try {
@@ -42,9 +73,26 @@ class LibraryScanner @Inject constructor(
             }
             val existingMap = existingTracks.associate { it.uri to it.lastModified }
 
-            // 2. Scan document tree using high-speed DocumentsContract queries
-            val discoveredFiles = folderScanner.scanTree(treeUri)
-            val discoveredUris = discoveredFiles.map { it.uriString }.toSet()
+            // 2. Discover files across all configured folders
+            val discoveredFilesMap = mutableMapOf<String, DiscoveredFile>()
+
+            for (entry in entries) {
+                if (entry.isMediaStore || entry.uriString == FolderEntry.DOWNLOADS_URI) {
+                    val files = folderScanner.scanMediaStore("Download")
+                    for (file in files) {
+                        discoveredFilesMap[file.uriString] = file
+                    }
+                } else {
+                    val uri = Uri.parse(entry.uriString)
+                    val files = folderScanner.scanTree(uri)
+                    for (file in files) {
+                        discoveredFilesMap[file.uriString] = file
+                    }
+                }
+            }
+
+            val discoveredFiles = discoveredFilesMap.values.toList()
+            val discoveredUris = discoveredFilesMap.keys
 
             // 3. Diff files: unmodified vs (new or modified)
             val filesToExtract = mutableListOf<DiscoveredFile>()
@@ -74,7 +122,6 @@ class LibraryScanner @Inject constructor(
             val batchSize = 25
             val extractedBatch = mutableListOf<TrackEntity>()
 
-            // Chunk files for bounded concurrency
             for (chunk in filesToExtract.chunked(8)) {
                 val extractedList = withContext(workerDispatcher) {
                     chunk.map { file ->
@@ -148,4 +195,3 @@ class LibraryScanner @Inject constructor(
         _scanState.value = ScanState.Idle
     }
 }
-

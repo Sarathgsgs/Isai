@@ -1,6 +1,9 @@
 package com.isai.player.ui.onboarding
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -8,14 +11,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Sync
@@ -23,6 +30,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,12 +38,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isai.player.R
@@ -52,8 +62,9 @@ fun OnboardingScreen(
     viewModel: OnboardingViewModel = hiltViewModel()
 ) {
     val scanState by viewModel.scanState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    val launcher = rememberLauncherForActivityResult(
+    val folderLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
         if (uri != null) {
@@ -61,9 +72,33 @@ fun OnboardingScreen(
         }
     }
 
+    val audioPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        Manifest.permission.READ_MEDIA_AUDIO
+    } else {
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.onDownloadsSelected()
+        }
+    }
+
+    val onChooseDownloads = {
+        val isGranted = ContextCompat.checkSelfPermission(context, audioPermission) == PackageManager.PERMISSION_GRANTED
+        if (isGranted) {
+            viewModel.onDownloadsSelected()
+        } else {
+            permissionLauncher.launch(audioPermission)
+        }
+    }
+
     OnboardingContent(
         scanState = scanState,
-        onChooseFolderClick = { launcher.launch(null) },
+        onChooseFolderClick = { folderLauncher.launch(null) },
+        onChooseDownloadsClick = onChooseDownloads,
         onScanCompleted = onScanCompleted,
         modifier = modifier
     )
@@ -73,6 +108,7 @@ fun OnboardingScreen(
 fun OnboardingContent(
     scanState: ScanState,
     onChooseFolderClick: () -> Unit,
+    onChooseDownloadsClick: () -> Unit,
     onScanCompleted: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -118,14 +154,41 @@ fun OnboardingContent(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(36.dp))
 
                 IsaiPrimaryButton(
                     onClick = onChooseFolderClick,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.FolderOpen,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = stringResource(id = R.string.onboarding_action_choose_folder),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = onChooseDownloadsClick,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = null,
+                        tint = IsaiTheme.colors.accent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Scan Downloads & Audio",
+                        color = IsaiTheme.colors.onBackground,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -254,6 +317,7 @@ private fun OnboardingScreenIdleDarkPreview() {
             OnboardingContent(
                 scanState = ScanState.Idle,
                 onChooseFolderClick = {},
+                onChooseDownloadsClick = {},
                 onScanCompleted = {}
             )
         }
@@ -272,6 +336,7 @@ private fun OnboardingScreenScanningDarkPreview() {
                     currentFileName = "Sundari Kannal Oru Sethi.flac"
                 ),
                 onChooseFolderClick = {},
+                onChooseDownloadsClick = {},
                 onScanCompleted = {}
             )
         }
@@ -291,6 +356,7 @@ private fun OnboardingScreenCompletedLightPreview() {
                     totalTracks = 120
                 ),
                 onChooseFolderClick = {},
+                onChooseDownloadsClick = {},
                 onScanCompleted = {}
             )
         }

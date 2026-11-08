@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.isai.player.data.repository.FolderEntry
 import com.isai.player.data.repository.SettingsRepository
 import com.isai.player.data.scanner.LibraryScanner
 import com.isai.player.data.scanner.ScanState
@@ -36,11 +37,17 @@ class OnboardingViewModel @Inject constructor(
 
             viewModelScope.launch {
                 settingsRepository.setSelectedFolder(treeUri.toString(), displayName)
-                libraryScanner.startScan(treeUri)
+                libraryScanner.scanAllFolders()
             }
         } catch (e: Exception) {
             // Permission grant failure or invalid URI
         }
     }
-}
 
+    fun onDownloadsSelected() {
+        viewModelScope.launch {
+            settingsRepository.toggleDownloadsFolder(true)
+            libraryScanner.scanAllFolders()
+        }
+    }
+}

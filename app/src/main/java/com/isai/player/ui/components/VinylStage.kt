@@ -195,24 +195,16 @@ fun VinylStage(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(geometry, track?.id) {
-                    val pivot = geometry.pivot
-                    val armUnit = geometry.armLength / 100f
-                    val headshellMidAu = Offset(-1.5f, 91f)
+                    val armHitRadiusPx = with(density) { 36.dp.toPx() }
 
                     awaitEachGesture {
                         val down: PointerInputChange = awaitFirstDown(requireUnconsumed = false)
 
-                        // Compute current headshell center
+                        // Compute current tonearm position & hit test
                         val currentAngle = tonearmState.displayAngle(progress())
-                        val rotRad = Math.toRadians((currentAngle - 90f).toDouble())
-                        val cosR = cos(rotRad).toFloat()
-                        val sinR = sin(rotRad).toFloat()
-                        val rx = headshellMidAu.x * cosR - headshellMidAu.y * sinR
-                        val ry = headshellMidAu.x * sinR + headshellMidAu.y * cosR
-                        val headshellCenter = Offset(pivot.x + rx * armUnit, pivot.y + ry * armUnit)
+                        val distToTonearm = geometry.distanceToTonearm(down.position, currentAngle)
 
-                        val distToHeadshell = (down.position - headshellCenter).getDistance()
-                        if (distToHeadshell <= hitRadiusPx) {
+                        if (distToTonearm <= armHitRadiusPx) {
                             // Touch began on tonearm hit target -> Tonearm takes priority, block disc swipe!
                             return@awaitEachGesture
                         }

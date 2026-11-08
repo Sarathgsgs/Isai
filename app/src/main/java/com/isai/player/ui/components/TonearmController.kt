@@ -232,20 +232,12 @@ fun TonearmInteractiveContainer(
                         return@awaitEachGesture
                     }
 
-                    // Compute current headshell center in screen space
+                    // Compute current tonearm display angle and hit test across entire tonearm tube
                     val currentDisplayAngle = state.displayAngle(progress())
-                    val rotRad = Math.toRadians((currentDisplayAngle - 90f).toDouble())
-                    val cosR = cos(rotRad).toFloat()
-                    val sinR = sin(rotRad).toFloat()
-
-                    // Rotate AU point around (0,0), scale by armUnit, translate by pivot
-                    val rx = headshellMidAu.x * cosR - headshellMidAu.y * sinR
-                    val ry = headshellMidAu.x * sinR + headshellMidAu.y * cosR
-                    val headshellCenter = Offset(pivot.x + rx * armUnit, pivot.y + ry * armUnit)
-
-                    val dist = (down.position - headshellCenter).getDistance()
-                    if (dist > hitRadiusPx) {
-                        // Pointer is outside the 56dp headshell touch target
+                    val dist = state.geometry.distanceToTonearm(down.position, currentDisplayAngle)
+                    val armHitRadiusPx = with(density) { 36.dp.toPx() }
+                    if (dist > armHitRadiusPx) {
+                        // Pointer is outside the tonearm touch target
                         return@awaitEachGesture
                     }
 
@@ -285,10 +277,15 @@ fun TonearmInteractiveContainer(
                                 velocity.x
                             }
 
-                            if (!isDrag && totalMovement < with(density) { 8.dp.toPx() }) {
-                                // Tap gesture detected
+                            val tapThresholdPx = with(density) { 12.dp.toPx() }
+                            if (!isDrag || totalMovement < tapThresholdPx) {
+                                // Tap on the tonebar detected: toggle play / pause / resume!
                                 state.setDragging(null)
-                                onTapToggle()
+                                if (!isPlaying) {
+                                    onScrubEnd(true, progress())
+                                } else {
+                                    onTapToggle()
+                                }
                             } else if (speedTowardRest > 1500f) {
                                 // Fast fling towards rest -> park & stop
                                 state.setDragging(null)

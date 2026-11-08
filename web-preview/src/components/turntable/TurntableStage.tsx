@@ -1,14 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { TonearmGeometry } from '../../turntable/TonearmGeometry';
 import { VinylDisc } from './VinylDisc';
 import { Tonearm } from './Tonearm';
 import { Track } from '../../types';
-import { Disc, Play, Pause } from 'lucide-react';
+import { Disc } from 'lucide-react';
 
 interface TurntableStageProps {
   currentTrack: Track | null;
   isPlaying: boolean;
   progress: number; // 0..1
+  currentTime?: number;
+  duration?: number;
+  onSeek?: (seconds: number) => void;
   onSeekProgress: (fraction: number) => void;
   onTogglePlay: () => void;
   rpm: number;
@@ -21,6 +24,9 @@ export const TurntableStage: React.FC<TurntableStageProps> = ({
   currentTrack,
   isPlaying,
   progress,
+  currentTime,
+  duration,
+  onSeek,
   onSeekProgress,
   onTogglePlay,
   rpm,
@@ -28,6 +34,21 @@ export const TurntableStage: React.FC<TurntableStageProps> = ({
   isLifted,
   className = '',
 }) => {
+  const handleScratch = (deltaSeconds: number) => {
+    const trackDuration = duration && duration > 0 ? duration : (currentTrack ? currentTrack.durationMs / 1000 : 180);
+    const currentSecs = currentTime !== undefined ? currentTime : progress * trackDuration;
+    const targetSecs = Math.max(0, Math.min(trackDuration, currentSecs + deltaSeconds));
+
+    onSeek?.(targetSecs);
+    if (trackDuration > 0) {
+      onSeekProgress(targetSecs / trackDuration);
+    }
+  };
+
+  const handleScratchEnd = () => {
+    // Scrub completed smoothly
+  };
+
   // Dimensions for responsive stage
   const stageWidth = 440;
   const stageHeight = 440;
@@ -126,17 +147,16 @@ export const TurntableStage: React.FC<TurntableStageProps> = ({
           }}
         />
 
-        {/* Vinyl Disc Platter */}
+        {/* Vinyl Disc Platter with Horizontal Scratch & Scrub */}
         <div
-          className="absolute cursor-pointer"
+          className="absolute"
           style={{
             left: `${discCenter.x - discRadius}px`,
             top: `${discCenter.y - discRadius}px`,
             width: `${discRadius * 2}px`,
             height: `${discRadius * 2}px`,
           }}
-          onClick={onTogglePlay}
-          title={isPlaying ? 'Click to pause' : 'Click to play'}
+          title="Tap to play/pause • Drag horizontally to scrub audio"
         >
           <VinylDisc
             isPlaying={isPlaying}
@@ -144,6 +164,9 @@ export const TurntableStage: React.FC<TurntableStageProps> = ({
             albumArt={currentTrack?.artPath}
             fallbackSeed={currentTrack ? `${currentTrack.title} ${currentTrack.artist}` : 'Isai Record'}
             sizePx={discRadius * 2}
+            onScratch={handleScratch}
+            onScratchEnd={handleScratchEnd}
+            onClick={onTogglePlay}
           />
         </div>
 
@@ -173,11 +196,14 @@ export const TurntableStage: React.FC<TurntableStageProps> = ({
         />
       </div>
 
-      {/* Tactile Lower Chassis Details & Gesture Guide */}
+      {/* Tactile Lower Chassis Details & Status Guide */}
       <div className="w-full flex items-center justify-between text-[11px] text-neutral-400/80 px-4 pt-1 border-t border-white/5">
         <div className="flex items-center gap-1.5">
-          <Disc className="w-3.5 h-3.5 text-amber-500 animate-[spin_6s_linear_infinite]" style={{ animationPlayState: isPlaying ? 'running' : 'paused' }} />
-          <span>Interactive Tonearm: Drag needle tip to seek</span>
+          <Disc
+            className="w-3.5 h-3.5 text-amber-500 animate-[spin_6s_linear_infinite]"
+            style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}
+          />
+          <span>33⅓ RPM Hi-Fi Vinyl Platter</span>
         </div>
         <div className="font-mono text-neutral-500 text-[10px]">
           {Math.round(progress * 100)}% Track Depth

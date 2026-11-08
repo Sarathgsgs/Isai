@@ -81,6 +81,22 @@ class TonearmGeometry(
         return alphaDeg in minAngle..maxAngle
     }
 
+    /**
+     * Computes the shortest distance in screen pixels from [point] to the tonearm (bar tube + stylus tip).
+     */
+    fun distanceToTonearm(point: Offset, alphaDeg: Float): Float {
+        val tip = stylusPosition(alphaDeg)
+        val a = pivot
+        val b = tip
+        val ab = b - a
+        val ap = point - a
+        val abLenSq = ab.x * ab.x + ab.y * ab.y
+        if (abLenSq <= 0.0001f) return (point - a).getDistance()
+        val t = ((ap.x * ab.x + ap.y * ab.y) / abLenSq).coerceIn(0f, 1f)
+        val proj = Offset(a.x + t * ab.x, a.y + t * ab.y)
+        return (point - proj).getDistance()
+    }
+
     private fun solveIntersectionAngle(d: Float, l: Float, r: Float, thetaDeg: Float): Float {
         val cosDelta = ((l * l + d * d - r * r) / (2f * l * d)).coerceIn(-1f, 1f)
         val deltaRad = acos(cosDelta.toDouble())

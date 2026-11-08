@@ -18,12 +18,21 @@ export interface Track {
   sizeBytes?: number;
   artPath?: string;
   folderPath?: string;
+  folderId?: string;
   dateAdded: number;
   isFavorite: boolean;
   hasLyrics?: boolean;
   lyricsLrc?: string;
   waveform?: number[]; // normalized 0..1 amplitude points
   isCustomFile?: boolean;
+}
+
+export interface MusicFolder {
+  id: string;
+  name: string;
+  path?: string;
+  trackCount: number;
+  addedAt: number;
 }
 
 export interface Album {

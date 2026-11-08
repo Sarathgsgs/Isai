@@ -1,3 +1,4 @@
+
 # Isai: Complete Implementation Plan (Core v1 + Feature Add-ons Round 1 & Round 2)
 
 **Isai** is an offline local-music player for Android. Its Now Playing screen is a spinning vinyl record with a working tonearm. You can drag the tonearm to seek or to lift the needle and stop playback.

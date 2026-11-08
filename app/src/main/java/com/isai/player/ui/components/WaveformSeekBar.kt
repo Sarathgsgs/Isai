@@ -162,11 +162,6 @@ fun WaveformSeekBar(
                     val down = awaitFirstDown(requireUnconsumed = false)
                     val width = size.width.toFloat().coerceAtLeast(1f)
                     val startX = down.position.x
-                    val startY = down.position.y
-
-                    var isHorizontalDrag = false
-                    var totalX = 0f
-                    var totalY = 0f
 
                     down.consume()
                     isTouching = true
@@ -179,7 +174,7 @@ fun WaveformSeekBar(
 
                     while (true) {
                         val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull() ?: break
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: event.changes.firstOrNull() ?: break
 
                         if (change.changedToUp()) {
                             change.consume()
@@ -188,23 +183,6 @@ fun WaveformSeekBar(
                             scope.launch { thumbRadiusAnim.animateTo(2.dp.value, tween(150)) }
                             onScrubEnd(true, finalProg)
                             break
-                        }
-
-                        val dx = change.position.x - startX
-                        val dy = change.position.y - startY
-                        totalX = abs(dx)
-                        totalY = abs(dy)
-
-                        // Vertical slop rule: if gesture is predominantly vertical early on, cancel drag
-                        if (!isHorizontalDrag && totalY > 16.dp.toPx() && totalY > totalX * 1.5f) {
-                            isTouching = false
-                            scope.launch { thumbRadiusAnim.animateTo(2.dp.value, tween(150)) }
-                            onScrubEnd(false, progress())
-                            break
-                        }
-
-                        if (totalX > 8.dp.toPx()) {
-                            isHorizontalDrag = true
                         }
 
                         change.consume()
@@ -265,7 +243,7 @@ fun WaveformSeekBar(
                 )
 
                 onDrawBehind {
-                    val currentProgress = if (!enabled) 0f else progress().coerceIn(0f, 1f)
+                    val currentProgress = if (!enabled) 0f else (if (isTouching) touchProgress else progress()).coerceIn(0f, 1f)
                     val progressX = (currentProgress * canvasWidth).coerceIn(0f, canvasWidth)
 
                     when (resolvedStyle) {

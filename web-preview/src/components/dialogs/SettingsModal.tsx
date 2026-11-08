@@ -155,7 +155,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
 
 
-        {/* Section 6: Offline Guarantee */}
+        {/* Section 5: Offline Guarantee */}
         <div className="p-3.5 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 flex items-center gap-3 text-xs text-emerald-300">
           <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
           <div>

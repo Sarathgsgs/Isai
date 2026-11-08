@@ -1,7 +1,10 @@
 package com.isai.player.ui.settings
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -22,8 +25,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Refresh
@@ -59,12 +65,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isai.player.R
+import com.isai.player.data.repository.FolderEntry
 import com.isai.player.data.repository.LiftBehavior
 import com.isai.player.data.repository.LyricsTextSize
 import com.isai.player.data.repository.SeekBarStyle
@@ -94,7 +103,21 @@ fun SettingsScreen(
     var showPurgeConfirmDialog by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
 
-    // SAF Document Tree Launcher for changing music directory
+    val audioPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        Manifest.permission.READ_MEDIA_AUDIO
+    } else {
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.toggleDownloadsFolder(true)
+        }
+    }
+
+    // SAF Document Tree Launcher for adding music directory
     val folderPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
@@ -107,7 +130,7 @@ fun SettingsScreen(
             }
             val docFile = DocumentFile.fromTreeUri(context, uri)
             val folderName = docFile?.name ?: uri.lastPathSegment ?: "Music"
-            viewModel.updateFolderAndRescan(uri, folderName)
+            viewModel.addFolder(uri, folderName)
         }
     }
 
@@ -476,46 +499,171 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = stringResource(id = R.string.settings_current_folder),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = IsaiTheme.colors.onSurfaceVariant
-                    )
-                    Text(
-                        text = state.selectedFolderName ?: stringResource(id = R.string.settings_no_folder),
+                        text = "Music Directories",
                         style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = IsaiTheme.colors.onBackground
                     )
+                    Text(
+                        text = "Audio from all active directories is merged into your offline library.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IsaiTheme.colors.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Download Folder Switch
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(IsaiTheme.colors.surfaceVariant.copy(alpha = 0.5f))
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = null,
+                                tint = IsaiTheme.colors.accent,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "System Downloads Folder",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = IsaiTheme.colors.onBackground
+                                )
+                                Text(
+                                    text = "Scan all audio in /Download (new & existing)",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = IsaiTheme.colors.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Switch(
+                            checked = state.isDownloadsIncluded,
+                            onCheckedChange = { enable ->
+                                if (enable) {
+                                    val isGranted = ContextCompat.checkSelfPermission(context, audioPermission) == PackageManager.PERMISSION_GRANTED
+                                    if (isGranted) {
+                                        viewModel.toggleDownloadsFolder(true)
+                                    } else {
+                                        permissionLauncher.launch(audioPermission)
+                                    }
+                                } else {
+                                    viewModel.toggleDownloadsFolder(false)
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = IsaiTheme.colors.onAccent,
+                                checkedTrackColor = IsaiTheme.colors.accent,
+                                uncheckedThumbColor = IsaiTheme.colors.onSurfaceVariant,
+                                uncheckedTrackColor = IsaiTheme.colors.surfaceVariant
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Active Directories List
+                    if (state.folderEntries.isNotEmpty()) {
+                        Text(
+                            text = "Active Folders (${state.folderEntries.size})",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = IsaiTheme.colors.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        state.folderEntries.forEach { entry ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(IsaiTheme.colors.surfaceVariant.copy(alpha = 0.35f))
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(
+                                        imageVector = if (entry.isMediaStore) Icons.Default.Download else Icons.Default.Folder,
+                                        contentDescription = null,
+                                        tint = if (entry.isMediaStore) IsaiTheme.colors.accent else IsaiTheme.colors.onSurfaceVariant,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text(
+                                            text = entry.displayName,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = IsaiTheme.colors.onBackground
+                                        )
+                                        Text(
+                                            text = if (entry.isMediaStore) "System MediaStore (/Download)" else entry.uriString,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = IsaiTheme.colors.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+
+                                IconButton(
+                                    onClick = { viewModel.removeFolder(entry.uriString) },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Remove folder",
+                                        tint = IsaiTheme.colors.onSurfaceVariant,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
 
                     if (state.scanStatusMessage != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = state.scanStatusMessage ?: "",
                             style = MaterialTheme.typography.labelSmall,
                             color = IsaiTheme.colors.accent
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
 
                     if (state.purgedCount != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = stringResource(id = R.string.settings_status_purged, state.purgedCount ?: 0),
                             style = MaterialTheme.typography.labelSmall,
                             color = IsaiTheme.colors.accent
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Action Buttons
+                    // Action Buttons: Rescan All and Add Folder
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
                             onClick = { viewModel.rescanLibrary() },
-                            enabled = !state.isScanning && state.selectedFolderUri != null,
+                            enabled = !state.isScanning && (state.folderEntries.isNotEmpty() || state.selectedFolderUri != null),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = IsaiTheme.colors.accent,
                                 contentColor = IsaiTheme.colors.onAccent
@@ -549,14 +697,14 @@ fun SettingsScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Folder,
+                                imageVector = Icons.Default.Add,
                                 contentDescription = null,
                                 tint = IsaiTheme.colors.onBackground,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = stringResource(id = R.string.settings_action_change_folder),
+                                text = "Add Folder",
                                 color = IsaiTheme.colors.onBackground,
                                 fontWeight = FontWeight.SemiBold
                             )

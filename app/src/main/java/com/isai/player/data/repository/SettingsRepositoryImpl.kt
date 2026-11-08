@@ -24,6 +24,7 @@ class SettingsRepositoryImpl @Inject constructor(
         val LIFT_BEHAVIOR = stringPreferencesKey("lift_behavior")
         val SELECTED_FOLDER_URI = stringPreferencesKey("selected_folder_uri")
         val SELECTED_FOLDER_NAME = stringPreferencesKey("selected_folder_name")
+        val FOLDER_ENTRIES = stringPreferencesKey("folder_entries_list")
         val DYNAMIC_ACCENT_COLOR = booleanPreferencesKey("dynamic_accent_color")
         val SLEEP_TIMER_END = longPreferencesKey("sleep_timer_end")
         val SLEEP_TIMER_STOP_AT_END = booleanPreferencesKey("sleep_timer_stop_at_end")
@@ -31,6 +32,30 @@ class SettingsRepositoryImpl @Inject constructor(
         val PRE_GENERATE_WAVEFORMS = booleanPreferencesKey("pre_generate_waveforms")
         val LYRICS_TEXT_SIZE = stringPreferencesKey("lyrics_text_size")
         val KEEP_SCREEN_ON_LYRICS = booleanPreferencesKey("keep_screen_on_lyrics")
+    }
+
+    private fun serializeFolderEntries(entries: List<FolderEntry>): String {
+        return entries.joinToString("\n") { "${it.uriString}\t${it.displayName}\t${it.isMediaStore}" }
+    }
+
+    private fun deserializeFolderEntries(raw: String?): List<FolderEntry> {
+        if (raw.isNullOrBlank()) return emptyList()
+        return raw.lines().mapNotNull { line ->
+            val parts = line.split("\t")
+            if (parts.size >= 3) {
+                FolderEntry(
+                    uriString = parts[0],
+                    displayName = parts[1],
+                    isMediaStore = parts[2].toBoolean()
+                )
+            } else if (parts.size == 2) {
+                FolderEntry(
+                    uriString = parts[0],
+                    displayName = parts[1],
+                    isMediaStore = parts[0] == FolderEntry.DOWNLOADS_URI
+                )
+            } else null
+        }
     }
 
     private val safePreferences: Flow<Preferences> = dataStore.data
@@ -52,12 +77,34 @@ class SettingsRepositoryImpl @Inject constructor(
         runCatching { LiftBehavior.valueOf(raw) }.getOrDefault(LiftBehavior.PAUSE)
     }
 
+    override val folderEntries: Flow<List<FolderEntry>> = safePreferences.map { prefs ->
+        val raw = prefs[PreferencesKeys.FOLDER_ENTRIES]
+        val list = deserializeFolderEntries(raw)
+        if (list.isEmpty()) {
+            val legacyUri = prefs[PreferencesKeys.SELECTED_FOLDER_URI]
+            val legacyName = prefs[PreferencesKeys.SELECTED_FOLDER_NAME] ?: "Music"
+            if (!legacyUri.isNullOrBlank()) {
+                listOf(FolderEntry(legacyUri, legacyName, legacyUri == FolderEntry.DOWNLOADS_URI))
+            } else {
+                emptyList()
+            }
+        } else {
+            list
+        }
+    }
+
     override val selectedFolderUri: Flow<String?> = safePreferences.map { prefs ->
-        prefs[PreferencesKeys.SELECTED_FOLDER_URI]
+        val direct = prefs[PreferencesKeys.SELECTED_FOLDER_URI]
+        if (!direct.isNullOrBlank()) return@map direct
+        val entries = deserializeFolderEntries(prefs[PreferencesKeys.FOLDER_ENTRIES])
+        entries.firstOrNull()?.uriString
     }
 
     override val selectedFolderName: Flow<String?> = safePreferences.map { prefs ->
-        prefs[PreferencesKeys.SELECTED_FOLDER_NAME]
+        val direct = prefs[PreferencesKeys.SELECTED_FOLDER_NAME]
+        if (!direct.isNullOrBlank()) return@map direct
+        val entries = deserializeFolderEntries(prefs[PreferencesKeys.FOLDER_ENTRIES])
+        entries.firstOrNull()?.displayName
     }
 
     override val dynamicAccentColor: Flow<Boolean> = safePreferences.map { prefs ->
@@ -106,6 +153,64 @@ class SettingsRepositoryImpl @Inject constructor(
         dataStore.edit { prefs ->
             prefs[PreferencesKeys.SELECTED_FOLDER_URI] = uri
             prefs[PreferencesKeys.SELECTED_FOLDER_NAME] = name
+            val currentEntries = deserializeFolderEntries(prefs[PreferencesKeys.FOLDER_ENTRIES]).toMutableList()
+            val isMedia = uri == FolderEntry.DOWNLOADS_URI
+            val newEntry = FolderEntry(uri, name, isMedia)
+            val index = currentEntries.indexOfFirst { it.uriString == uri }
+            if (index >= 0) {
+                currentEntries[index] = newEntry
+            } else {
+                currentEntries.add(newEntry)
+            }
+            prefs[PreferencesKeys.FOLDER_ENTRIES] = serializeFolderEntries(currentEntries)
+        }
+    }
+
+    override suspend fun addFolder(entry: FolderEntry) {
+        dataStore.edit { prefs ->
+            val current = deserializeFolderEntries(prefs[PreferencesKeys.FOLDER_ENTRIES]).toMutableList()
+            val index = current.indexOfFirst { it.uriString == entry.uriString }
+            if (index >= 0) {
+                current[index] = entry
+            } else {
+                current.add(entry)
+            }
+            prefs[PreferencesKeys.FOLDER_ENTRIES] = serializeFolderEntries(current)
+            if (prefs[PreferencesKeys.SELECTED_FOLDER_URI].isNullOrBlank()) {
+                prefs[PreferencesKeys.SELECTED_FOLDER_URI] = entry.uriString
+                prefs[PreferencesKeys.SELECTED_FOLDER_NAME] = entry.displayName
+            }
+        }
+    }
+
+    override suspend fun removeFolder(uriString: String) {
+        dataStore.edit { prefs ->
+            val current = deserializeFolderEntries(prefs[PreferencesKeys.FOLDER_ENTRIES]).filterNot { it.uriString == uriString }
+            prefs[PreferencesKeys.FOLDER_ENTRIES] = serializeFolderEntries(current)
+            if (prefs[PreferencesKeys.SELECTED_FOLDER_URI] == uriString) {
+                val first = current.firstOrNull()
+                if (first != null) {
+                    prefs[PreferencesKeys.SELECTED_FOLDER_URI] = first.uriString
+                    prefs[PreferencesKeys.SELECTED_FOLDER_NAME] = first.displayName
+                } else {
+                    prefs.remove(PreferencesKeys.SELECTED_FOLDER_URI)
+                    prefs.remove(PreferencesKeys.SELECTED_FOLDER_NAME)
+                }
+            }
+        }
+    }
+
+    override suspend fun toggleDownloadsFolder(enabled: Boolean) {
+        if (enabled) {
+            addFolder(
+                FolderEntry(
+                    uriString = FolderEntry.DOWNLOADS_URI,
+                    displayName = "Downloads",
+                    isMediaStore = true
+                )
+            )
+        } else {
+            removeFolder(FolderEntry.DOWNLOADS_URI)
         }
     }
 
@@ -113,6 +218,7 @@ class SettingsRepositoryImpl @Inject constructor(
         dataStore.edit { prefs ->
             prefs.remove(PreferencesKeys.SELECTED_FOLDER_URI)
             prefs.remove(PreferencesKeys.SELECTED_FOLDER_NAME)
+            prefs.remove(PreferencesKeys.FOLDER_ENTRIES)
         }
     }
 

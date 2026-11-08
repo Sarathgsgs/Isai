@@ -1,9 +1,12 @@
 package com.isai.player.data.scanner
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -105,6 +108,107 @@ class FolderScanner @Inject constructor(
         return discoveredFiles
     }
 
+    /**
+     * Scans audio files via MediaStore.
+     * Allows scanning directories like the system Downloads folder which Android 11+ SAF blocks.
+     */
+    suspend fun scanMediaStore(
+        folderFilter: String? = "Download",
+        onFileDiscovered: ((DiscoveredFile) -> Unit)? = null
+    ): List<DiscoveredFile> {
+        val discoveredFiles = mutableListOf<DiscoveredFile>()
+        val contentResolver = context.contentResolver
+
+        val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        } else {
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        }
+
+        val mediaProjection = mutableListOf(
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.DISPLAY_NAME,
+            MediaStore.Audio.Media.MIME_TYPE,
+            MediaStore.Audio.Media.DATE_MODIFIED,
+            MediaStore.Audio.Media.SIZE
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mediaProjection.add(MediaStore.Audio.Media.RELATIVE_PATH)
+        } else {
+            @Suppress("DEPRECATION")
+            mediaProjection.add(MediaStore.Audio.Media.DATA)
+        }
+
+        val selection: String?
+        val selectionArgs: Array<String>?
+
+        if (!folderFilter.isNullOrBlank()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                selection = "${MediaStore.Audio.Media.RELATIVE_PATH} LIKE ?"
+                selectionArgs = arrayOf("%$folderFilter%")
+            } else {
+                @Suppress("DEPRECATION")
+                selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
+                selectionArgs = arrayOf("%/$folderFilter/%")
+            }
+        } else {
+            selection = null
+            selectionArgs = null
+        }
+
+        try {
+            contentResolver.query(
+                collection,
+                mediaProjection.toTypedArray(),
+                selection,
+                selectionArgs,
+                null
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
+                val nameCol = cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
+                val mimeCol = cursor.getColumnIndex(MediaStore.Audio.Media.MIME_TYPE)
+                val modCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED)
+                val sizeCol = cursor.getColumnIndex(MediaStore.Audio.Media.SIZE)
+                val pathCol = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    cursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH)
+                } else {
+                    @Suppress("DEPRECATION")
+                    cursor.getColumnIndex(MediaStore.Audio.Media.DATA)
+                }
+
+                while (cursor.moveToNext()) {
+                    currentCoroutineContext().ensureActive()
+
+                    val id = if (idCol >= 0) cursor.getLong(idCol) else continue
+                    val displayName = if (nameCol >= 0) cursor.getString(nameCol) ?: "Unknown" else "Unknown"
+                    val mimeType = if (mimeCol >= 0) cursor.getString(mimeCol) ?: "" else ""
+                    val dateModifiedSec = if (modCol >= 0) cursor.getLong(modCol) else 0L
+                    val sizeBytes = if (sizeCol >= 0) cursor.getLong(sizeCol) else 0L
+                    val rawPath = if (pathCol >= 0) cursor.getString(pathCol) ?: folderFilter ?: "Download" else "Download"
+
+                    if (isAudioFile(mimeType, displayName)) {
+                        val contentUri = ContentUris.withAppendedId(collection, id)
+                        val file = DiscoveredFile(
+                            uriString = contentUri.toString(),
+                            documentId = "mediastore_$id",
+                            displayName = displayName,
+                            mimeType = mimeType.ifBlank { guessMimeType(displayName) },
+                            sizeBytes = sizeBytes,
+                            lastModified = dateModifiedSec * 1000L,
+                            folderPath = rawPath.trim('/')
+                        )
+                        discoveredFiles.add(file)
+                        onFileDiscovered?.invoke(file)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Permission not granted or query error handled gracefully
+        }
+
+        return discoveredFiles
+    }
+
     fun isAudioFile(mimeType: String?, displayName: String?): Boolean {
         if (mimeType != null && mimeType.startsWith("audio/", ignoreCase = true)) {
             return true
@@ -126,4 +230,3 @@ class FolderScanner @Inject constructor(
         }
     }
 }
-

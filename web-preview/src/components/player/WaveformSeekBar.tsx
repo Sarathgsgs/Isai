@@ -21,9 +21,12 @@ export const WaveformSeekBar: React.FC<WaveformSeekBarProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoverFraction, setHoverFraction] = useState<number | null>(null);
   const [isScrubbing, setIsScrubbing] = useState(false);
+  const [scrubFraction, setScrubFraction] = useState<number | null>(null);
 
   const safeDuration = duration > 0 ? duration : 1;
-  const progress = Math.max(0, Math.min(1, currentTime / safeDuration));
+  const progress = scrubFraction !== null 
+    ? scrubFraction 
+    : Math.max(0, Math.min(1, currentTime / safeDuration));
 
   // Synthesize or normalize 60 waveform bars
   const bars = useMemo(() => {
@@ -54,49 +57,67 @@ export const WaveformSeekBar: React.FC<WaveformSeekBarProps> = ({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    if (!containerRef.current) return;
+    try {
+      containerRef.current.setPointerCapture(e.pointerId);
+    } catch {}
     setIsScrubbing(true);
-    updateSeek(e);
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const frac = rect.width > 0 ? x / rect.width : 0;
+    setScrubFraction(frac);
+    onSeek(frac * safeDuration);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-    const frac = x / rect.width;
+    const frac = rect.width > 0 ? x / rect.width : 0;
     setHoverFraction(frac);
 
     if (isScrubbing) {
-      updateSeek(e);
+      setScrubFraction(frac);
+      onSeek(frac * safeDuration);
     }
   };
 
-  const updateSeek = (e: React.PointerEvent) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-    const frac = x / rect.width;
-    onSeek(frac * safeDuration);
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (isScrubbing) {
+      if (containerRef.current) {
+        try {
+          if (containerRef.current.hasPointerCapture(e.pointerId)) {
+            containerRef.current.releasePointerCapture(e.pointerId);
+          }
+        } catch {}
+      }
+      setIsScrubbing(false);
+      setScrubFraction(null);
+    }
   };
 
-  const handlePointerUp = () => {
-    setIsScrubbing(false);
+  const handlePointerCancel = (e: React.PointerEvent) => {
+    handlePointerUp(e);
   };
+
+  const displayTime = scrubFraction !== null ? scrubFraction * safeDuration : currentTime;
 
   return (
     <div
-      className={`w-full flex flex-col gap-1 select-none ${className}`}
+      className={`w-full flex flex-col gap-1 select-none touch-none ${className}`}
       onPointerLeave={() => {
-        setHoverFraction(null);
-        setIsScrubbing(false);
+        if (!isScrubbing) setHoverFraction(null);
       }}
-      onPointerUp={handlePointerUp}
     >
       {/* Waveform Bar Track */}
       <div
         ref={containerRef}
-        className="relative h-12 w-full flex items-center cursor-pointer group"
+        className="relative h-12 w-full flex items-center cursor-pointer group touch-none"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
         {style === 'waveform_bars' && (
           <div className="w-full h-full flex items-center justify-between gap-[2px] px-1">
@@ -185,8 +206,8 @@ export const WaveformSeekBar: React.FC<WaveformSeekBarProps> = ({
 
       {/* Time Elapsed & Remaining */}
       <div className="w-full flex items-center justify-between text-[11px] font-mono text-neutral-400 px-1">
-        <span>{formatTime(currentTime)}</span>
-        <span>-{formatTime(Math.max(0, safeDuration - currentTime))}</span>
+        <span>{formatTime(displayTime)}</span>
+        <span>-{formatTime(Math.max(0, safeDuration - displayTime))}</span>
       </div>
     </div>
   );

@@ -300,6 +300,72 @@ export class AudioEngine {
     }
   }
 
+  private lastScratchSoundTime: number = 0;
+
+  /**
+   * Generates a realistic physical vinyl DJ scratch audio effect modulated by drag velocity and direction
+   */
+  playScratchSound(velocity: number) {
+    this.initAudioNodes();
+    if (!this.audioCtx) return;
+    const now = this.audioCtx.currentTime;
+    if (now - this.lastScratchSoundTime < 0.04) return;
+    this.lastScratchSoundTime = now;
+
+    try {
+      const ctx = this.audioCtx;
+      const absVel = Math.min(80, Math.max(3, Math.abs(velocity)));
+      const isForward = velocity >= 0;
+      const duration = 0.05 + Math.min(0.06, absVel * 0.001);
+
+      // Vinyl groove noise friction
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const bandpass = ctx.createBiquadFilter();
+      bandpass.type = 'bandpass';
+      const centerFreq = 700 + absVel * 22;
+      bandpass.frequency.setValueAtTime(centerFreq, now);
+      bandpass.Q.setValueAtTime(2.2, now);
+
+      // DJ Scratch Resonant Pitch Oscillator
+      const osc = ctx.createOscillator();
+      osc.type = 'triangle';
+      const startFreq = isForward ? 220 + absVel * 6 : 420 + absVel * 10;
+      const endFreq = isForward ? 420 + absVel * 10 : 200 + absVel * 5;
+      osc.frequency.setValueAtTime(startFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), now + duration);
+
+      const oscGain = ctx.createGain();
+      oscGain.gain.setValueAtTime(0.06, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      const mainGain = ctx.createGain();
+      mainGain.gain.setValueAtTime(0.12, now);
+      mainGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      noise.connect(bandpass);
+      bandpass.connect(mainGain);
+      osc.connect(oscGain);
+      oscGain.connect(mainGain);
+
+      mainGain.connect(ctx.destination);
+
+      noise.start(now);
+      osc.start(now);
+      osc.stop(now + duration);
+    } catch {
+      // Safe fallback
+    }
+  }
+
   /**
    * Procedural rich offline music generator for seamless offline demo listening
    */

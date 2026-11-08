@@ -23,6 +23,8 @@ export const Tonearm: React.FC<TonearmProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragAngle, setDragAngle] = useState<number | null>(null);
   const containerRef = useRef<SVGSVGElement>(null);
+  const startPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const hasMovedRef = useRef<boolean>(false);
 
   const activeAngle = dragAngle !== null ? dragAngle : currentAngle;
 
@@ -30,9 +32,15 @@ export const Tonearm: React.FC<TonearmProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
+    hasMovedRef.current = false;
+    startPointerRef.current = { x: e.clientX, y: e.clientY };
 
     if (containerRef.current) {
-      containerRef.current.setPointerCapture(e.pointerId);
+      try {
+        containerRef.current.setPointerCapture(e.pointerId);
+      } catch {
+        // Safe fallback
+      }
     }
   };
 
@@ -58,25 +66,44 @@ export const Tonearm: React.FC<TonearmProps> = ({
   );
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging) return;
-    const newAngle = calculateAngleFromPointer(e.clientX, e.clientY);
-    setDragAngle(newAngle);
+    if (!isDragging || !startPointerRef.current) return;
+    const dist = Math.hypot(e.clientX - startPointerRef.current.x, e.clientY - startPointerRef.current.y);
+    if (dist > 5) {
+      hasMovedRef.current = true;
+      const newAngle = calculateAngleFromPointer(e.clientX, e.clientY);
+      setDragAngle(newAngle);
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (!isDragging) return;
     setIsDragging(false);
-    if (dragAngle !== null) {
-      onSeekAngle(dragAngle);
-      setDragAngle(null);
-    }
+
     if (containerRef.current) {
       try {
-        containerRef.current.releasePointerCapture(e.pointerId);
+        if (containerRef.current.hasPointerCapture(e.pointerId)) {
+          containerRef.current.releasePointerCapture(e.pointerId);
+        }
       } catch {
         // Safe fail
       }
     }
+
+    // If pointer moved less than 5px, it is a tap on the tonebar to toggle play/pause/resume!
+    if (!hasMovedRef.current) {
+      setDragAngle(null);
+      startPointerRef.current = null;
+      if (onTogglePlay) {
+        onTogglePlay();
+      }
+      return;
+    }
+
+    if (dragAngle !== null) {
+      onSeekAngle(dragAngle);
+      setDragAngle(null);
+    }
+    startPointerRef.current = null;
   };
 
   // Keyboard accessibility
@@ -246,6 +273,16 @@ export const Tonearm: React.FC<TonearmProps> = ({
           strokeLinecap="round"
           opacity={0.7}
         />
+        {/* Wide interactive touch hit area across the entire tonebar tube */}
+        <path
+          d={`M 0,${-10 * armUnit} C ${1 * armUnit},${35 * armUnit} ${-1 * armUnit},${60 * armUnit} ${-3 * armUnit},${82 * armUnit}`}
+          stroke="transparent"
+          strokeWidth={armUnit * 22}
+          fill="none"
+          strokeLinecap="round"
+          className="pointer-events-auto cursor-grab active:cursor-grabbing touch-none"
+          onPointerDown={handlePointerDown}
+        />
 
         {/* --- HEADSHELL & CARTRIDGE --- */}
         <g transform={`translate(${-3 * armUnit}, ${82 * armUnit})`}>
@@ -326,16 +363,10 @@ export const Tonearm: React.FC<TonearmProps> = ({
           <circle
             cx={0}
             cy={armUnit * 14}
-            r={armUnit * 18}
-            className="pointer-events-auto cursor-grab active:cursor-grabbing"
+            r={armUnit * 22}
+            className="pointer-events-auto cursor-grab active:cursor-grabbing touch-none"
             fill="transparent"
             onPointerDown={handlePointerDown}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onTogglePlay && !isDragging) {
-                onTogglePlay();
-              }
-            }}
           />
         </g>
       </g>
