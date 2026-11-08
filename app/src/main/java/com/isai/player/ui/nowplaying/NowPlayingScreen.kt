@@ -167,7 +167,7 @@ fun NowPlayingScreen(
         QueueBottomSheet(
             sheetState = queueSheetState,
             queue = playerState.queue,
-            currentQueueIndex = playerState.queueIndex,
+            currentQueueIndex = playerState.currentQueueIndex,
             isPlaying = playerState.isPlaying,
             onTrackClick = { index ->
                 viewModel.playQueueIndex(index)

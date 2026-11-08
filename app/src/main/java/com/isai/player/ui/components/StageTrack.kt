@@ -17,3 +17,14 @@ data class StageTrack(
     val year: Int,
     val art: Any?
 )
+
+fun com.isai.player.data.model.Track.toStageTrack(): StageTrack {
+    return StageTrack(
+        id = id.toString(),
+        title = title,
+        artist = artist,
+        album = album,
+        year = year,
+        art = artPath
+    )
+}
