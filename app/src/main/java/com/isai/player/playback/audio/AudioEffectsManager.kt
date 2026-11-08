@@ -202,7 +202,7 @@ class AudioEffectsManager @Inject constructor(
     }
 
     private fun broadcastSessionOpen(sessionId: Int) {
-        val intent = Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_SESSION_ID).apply {
+        val intent = Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION).apply {
             putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
             putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
             putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
@@ -212,7 +212,7 @@ class AudioEffectsManager @Inject constructor(
 
     private fun broadcastSessionClose(sessionId: Int) {
         if (sessionId == 0) return
-        val intent = Intent(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_SESSION_ID).apply {
+        val intent = Intent(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION).apply {
             putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
             putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
         }
