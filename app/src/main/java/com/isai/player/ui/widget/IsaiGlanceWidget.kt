@@ -2,9 +2,11 @@ package com.isai.player.ui.widget
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.isai.player.MainActivity
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -80,7 +82,7 @@ class IsaiGlanceWidget : GlanceAppWidget() {
                             title = track?.title ?: context.getString(R.string.miniplayer_placeholder_title),
                             artist = track?.artist ?: context.getString(R.string.miniplayer_placeholder_artist),
                             album = track?.album ?: "",
-                            positionMs = playerState.positionMs,
+                            positionMs = playerState.currentPositionMs,
                             durationMs = playerState.durationMs,
                             progress = playerState.progress,
                             isPlaying = isPlaying,
@@ -161,7 +163,7 @@ private fun MediumWidget(
             contentDescription = null,
             modifier = GlanceModifier
                 .size(76.dp)
-                .clickable(actionStartActivity(openAppIntent(context)))
+                .clickable(actionStartActivity<MainActivity>())
         )
 
         Spacer(modifier = GlanceModifier.width(12.dp))
@@ -270,7 +272,7 @@ private fun LargeWidget(
                 contentDescription = null,
                 modifier = GlanceModifier
                     .size(110.dp)
-                    .clickable(actionStartActivity(openAppIntent(context)))
+                    .clickable(actionStartActivity<MainActivity>())
             )
 
             Spacer(modifier = GlanceModifier.width(16.dp))
