@@ -110,7 +110,7 @@ class NowPlayingViewModel @Inject constructor(
                     if (parsed == null || parsed.lines.isEmpty()) {
                         LyricsState.Empty
                     } else if (parsed.format == LyricsFormat.SYNCED) {
-                        val effectiveTime = state.positionMs + parsed.offsetMs
+                        val effectiveTime = state.currentPositionMs + parsed.offsetMs
                         val activeIndex = LrcParser.lineIndexAt(parsed.lines, effectiveTime)
                         LyricsState.Synced(parsed.lines, activeIndex, parsed.offsetMs)
                     } else {
@@ -136,7 +136,7 @@ class NowPlayingViewModel @Inject constructor(
         // Prefetch waveform for next track in queue when playing
         playerState.onEach { state ->
             if (state.isPlaying && state.queue.isNotEmpty()) {
-                val nextIndex = state.queueIndex + 1
+                val nextIndex = state.currentQueueIndex + 1
                 if (nextIndex < state.queue.size) {
                     val nextTrack = state.queue[nextIndex]
                     waveformRepository.prefetchWaveform(
@@ -235,12 +235,7 @@ class NowPlayingViewModel @Inject constructor(
     }
 
     fun cycleRepeatMode() {
-        val nextMode = when (playerState.value.repeatMode) {
-            RepeatMode.OFF -> RepeatMode.ALL
-            RepeatMode.ALL -> RepeatMode.ONE
-            RepeatMode.ONE -> RepeatMode.OFF
-        }
-        playerController.setRepeatMode(nextMode)
+        playerController.cycleRepeatMode()
     }
 
     fun clearSwipeDirection() {

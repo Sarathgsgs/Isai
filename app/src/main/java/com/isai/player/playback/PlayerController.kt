@@ -233,6 +233,10 @@ class PlayerController @Inject constructor(
         mediaController?.shuffleModeEnabled = enabled
     }
 
+    fun toggleShuffle() {
+        setShuffleModeEnabled(!_playerState.value.shuffleModeEnabled)
+    }
+
     fun cycleRepeatMode() {
         val player = mediaController ?: return
         val nextMode = _playerState.value.repeatMode.next()
@@ -311,6 +315,17 @@ class PlayerController @Inject constructor(
                 }
                 queueStore.saveQueue(updatedQueue)
             }
+        }
+    }
+
+    fun moveQueueItem(fromIndex: Int, toIndex: Int) {
+        reorderQueue(fromIndex, toIndex)
+    }
+
+    fun playTrackAtIndex(index: Int) {
+        val tracks = _playerState.value.queue
+        if (index in tracks.indices) {
+            playTrack(tracks[index], tracks, index)
         }
     }
 
