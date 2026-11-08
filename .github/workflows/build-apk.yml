@@ -29,7 +29,18 @@ jobs:
         run: chmod +x gradlew
 
       - name: Assemble Debug APK
-        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        run: |
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee build.log || true
+          if [ ! -f app/build/outputs/apk/debug/app-debug.apk ]; then
+            echo "===================== GRADLE FAILURE LOG ====================="
+            cat build.log | grep -E "(FAILURE:|Execution failed|Caused by:|error:|> Task)" -A 5 -B 1 | head -n 100
+            echo "=============================================================="
+            FAIL_ERR=$(grep -A 10 "What went wrong:" build.log | tr '\n' ' ' | cut -c 1-400)
+            FAIL_CAUSE=$(grep -A 5 "Caused by:" build.log | tr '\n' ' ' | cut -c 1-400)
+            echo "::error title=WhatWentWrong::$FAIL_ERR"
+            echo "::error title=CausedBy::$FAIL_CAUSE"
+            exit 1
+          fi
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
