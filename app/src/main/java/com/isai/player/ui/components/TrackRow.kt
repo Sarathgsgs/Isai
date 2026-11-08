@@ -32,9 +32,30 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.isai.player.R
+import com.isai.player.data.model.Track
 import com.isai.player.data.repository.ThemeMode
 import com.isai.player.ui.theme.IsaiTheme
 import com.isai.player.util.Formatters
+
+@Composable
+fun TrackRow(
+    track: Track,
+    onClick: () -> Unit,
+    onMoreOptions: () -> Unit,
+    modifier: Modifier = Modifier,
+    isPlaying: Boolean = false
+) {
+    TrackRow(
+        title = track.title,
+        artist = track.artist,
+        durationMs = track.durationMs,
+        artUri = track.artPath,
+        isPlaying = isPlaying,
+        onClick = onClick,
+        onMoreClick = onMoreOptions,
+        modifier = modifier
+    )
+}
 
 @Composable
 fun TrackRow(

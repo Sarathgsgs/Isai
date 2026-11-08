@@ -29,9 +29,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.isai.player.data.model.Album
 import com.isai.player.data.repository.ThemeMode
 import com.isai.player.ui.theme.CardShape
 import com.isai.player.ui.theme.IsaiTheme
+
+@Composable
+fun AlbumCard(
+    album: Album,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AlbumCard(
+        title = album.title,
+        subtitle = album.artist,
+        artUri = album.artPath,
+        onClick = onClick,
+        modifier = modifier
+    )
+}
 
 @Composable
 fun AlbumCard(
