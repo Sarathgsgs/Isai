@@ -47,6 +47,7 @@ data class IsaiColors(
     val onSurfaceVariant: Color,
     val ambientGlow: Color,
     val scrim: Color,
+    val onAccent: Color = if (isDark) Color(0xFF0D0D11) else Color.White,
     val metalLight: Color = MetalLight,
     val metalMid: Color = MetalMid,
     val metalDark: Color = MetalDark,

@@ -65,7 +65,6 @@ import com.isai.player.data.repository.ThemeMode
 import com.isai.player.ui.components.EmptyState
 import com.isai.player.ui.components.VinylColors
 import com.isai.player.ui.components.VinylDisc
-import com.isai.player.ui.components.rememberVinylColors
 import com.isai.player.ui.components.rememberVinylDiscState
 import com.isai.player.ui.library.TrackInfoDialog
 import com.isai.player.ui.library.TrackMenuBottomSheet
@@ -222,7 +221,7 @@ private fun AlbumHeroHeader(
     onShuffle: () -> Unit
 ) {
     val vinylDiscState = rememberVinylDiscState()
-    val vinylColors = rememberVinylColors()
+    val vinylColors = VinylColors.current()
 
     Column(
         modifier = Modifier
@@ -338,7 +337,7 @@ private fun AlbumHeroHeader(
                 onClick = onPlayAll,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = IsaiTheme.colors.accent,
-                    contentColor = IsaiTheme.colors.onAccent
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier

@@ -32,11 +32,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.progressBarRangeInfo
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
@@ -194,7 +192,6 @@ fun TonearmInteractiveContainer(
         modifier = modifier
             .fillMaxSize()
             .semantics(mergeDescendants = true) {
-                role = Role.Slider
                 progressBarRangeInfo = ProgressBarRangeInfo(
                     current = currentProg,
                     range = 0f..1f
