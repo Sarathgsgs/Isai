@@ -35,12 +35,19 @@ jobs:
         run: |
           ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee build.log || true
           if [ ! -f app/build/outputs/apk/debug/app-debug.apk ]; then
-            KOTLIN_ERRS=$(grep -E "(^e: |Compilation error|failed with an exception)" build.log | head -n 20 | tr '\n' ' ' | cut -c 1-800)
-            FAIL_ERR=$(grep -A 10 "What went wrong:" build.log | tr '\n' ' ' | cut -c 1-600)
+            KOTLIN_ERRS=$(grep -E "(^e: |Compilation error|failed with an exception)" build.log | head -n 30 | tr '\n' ' ' | cut -c 1-2000)
+            FAIL_ERR=$(grep -A 10 "What went wrong:" build.log | tr '\n' ' ' | cut -c 1-1000)
             echo "::error title=KotlinErrors::$KOTLIN_ERRS"
             echo "::error title=WhatWentWrong::$FAIL_ERR"
             exit 1
           fi
+
+      - name: Upload Build Log on Failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-failure-log
+          path: build.log
 
       - name: Push Build Log to Branch on Failure
         if: failure()
@@ -50,7 +57,7 @@ jobs:
           git checkout -B build-logs
           git add build.log
           git commit -m "build failure log" || true
-          git push -f origin build-logs || true
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" build-logs || true
 
       - name: Publish Step Summary
         if: always()
