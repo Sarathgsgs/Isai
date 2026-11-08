@@ -13,7 +13,7 @@ import com.isai.player.data.db.dao.HistoryDao
 import com.isai.player.data.db.dao.PlaylistDao
 import com.isai.player.data.db.dao.TrackDao
 import com.isai.player.data.db.entity.TrackEntity
-import com.isai.player.data.db.entity.toDomain
+import com.isai.player.data.model.toDomain
 import com.isai.player.data.model.Track
 import com.isai.player.playback.MediaItemMapper
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -105,10 +105,10 @@ class MediaBrowseTree @Inject constructor(
         val playlists = playlistDao.getAllPlaylistsSync()
         return playlists.map { p ->
             MediaItem.Builder()
-                .setMediaId("$MEDIA_ID_PLAYLISTS/${p.id}")
+                .setMediaId("$MEDIA_ID_PLAYLISTS/${p.playlist.id}")
                 .setMediaMetadata(
                     MediaMetadata.Builder()
-                        .setTitle(p.name)
+                        .setTitle(p.playlist.name)
                         .setSubtitle(context.getString(R.string.car_track_count, p.trackCount))
                         .setIsBrowsable(true)
                         .setIsPlayable(false)
